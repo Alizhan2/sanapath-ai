@@ -14,3 +14,7 @@
 [build.environment]
   NODE_VERSION = "20"
   VITE_API_URL = "https://sanapath-ai.onrender.com"
+  VITE_APP_NAME = "SanaPath AI"
+  VITE_FIREBASE_API_KEY = "AIzaSyBh2WvKx4Fte6q6UUU4YAElvQWtlrH5pto"
+  VITE_FIREBASE_AUTH_DOMAIN = "sanapath-ai.firebaseapp.com"
+  VITE_FIREBASE_PROJECT_ID = "sanapath-ai"
