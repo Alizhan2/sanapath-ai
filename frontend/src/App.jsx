@@ -5,6 +5,7 @@ import { NotificationProvider } from './context/NotificationContext';
 import { ProtectedRoute, PublicOnlyRoute } from './components/ProtectedRoute';
 import { ToastProvider } from './components/Toast';
 import AIAssistant from './components/AIAssistant';
+import OnboardingTour from './components/OnboardingTour';
 
 // Pages
 import Landing from './pages/Landing';
@@ -17,6 +18,9 @@ import Dashboard from './pages/Dashboard';
 import ProjectDetail from './pages/ProjectDetail';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import Leaderboard from './pages/Leaderboard';
+import About from './pages/About';
+import Contact from './pages/Contact';
 import NotFound from './pages/NotFound';
 
 
@@ -107,12 +111,24 @@ function App() {
                 }
               />
 
+              {/* Leaderboard */}
+              <Route path="/leaderboard" element={<Leaderboard />} />
+
+              {/* About */}
+              <Route path="/about" element={<About />} />
+
+              {/* Contact */}
+              <Route path="/contact" element={<Contact />} />
+
               {/* 404 Not Found */}
               <Route path="*" element={<NotFound />} />
             </Routes>
 
             {/* Global AI Assistant */}
             <AIAssistant />
+            
+            {/* Onboarding Tour for new users */}
+            <OnboardingTour />
           </div>
         </Router>
       </ToastProvider>

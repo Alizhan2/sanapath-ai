@@ -4,6 +4,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useGlobalNotifications } from '../context/NotificationContext';
 import { recordActivity, recordResourceClick } from '../hooks/useRealStats';
+import Certificate from '../components/Certificate';
 import {
   ArrowLeft,
   Calendar,
@@ -23,7 +24,8 @@ import {
   Linkedin,
   Copy,
   Check,
-  Youtube
+  Youtube,
+  Award
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 
@@ -36,6 +38,7 @@ const ProjectDetail = () => {
   const [expandedWeek, setExpandedWeek] = useState(0);
   const [completedTasks, setCompletedTasks] = useState({});
   const [linkedInCopied, setLinkedInCopied] = useState(false);
+  const [showCertificate, setShowCertificate] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -211,6 +214,34 @@ const ProjectDetail = () => {
                 {linkedInCopied ? 'Copied!' : 'Copy Post Text'}
               </button>
             </div>
+
+            {/* Certificate Button - shows when project is 100% complete */}
+            {getTotalProgress() === 100 && (
+              <motion.div
+                className="mt-4"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+              >
+                <button
+                  onClick={() => setShowCertificate(true)}
+                  className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-gradient-to-r from-yellow-500/20 to-amber-500/20 text-yellow-400 border border-yellow-500/30 hover:from-yellow-500/30 hover:to-amber-500/30 transition-all text-lg font-bold"
+                >
+                  <Award className="w-6 h-6" />
+                  🎉 Get Your Certificate!
+                  <Award className="w-6 h-6" />
+                </button>
+              </motion.div>
+            )}
+
+            {/* Certificate Modal */}
+            {showCertificate && (
+              <Certificate
+                userName={user?.displayName || user?.email?.split('@')[0] || 'Student'}
+                projectTitle={project.title}
+                techStack={project.tech_stack || []}
+                onClose={() => setShowCertificate(false)}
+              />
+            )}
           </motion.div>
 
           {/* Learning Outcomes */}

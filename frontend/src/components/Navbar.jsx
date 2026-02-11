@@ -35,11 +35,13 @@ const Navbar = () => {
     ? [
         { name: 'Home', href: '/' },
         { name: 'Dashboard', href: '/dashboard' },
+        { name: 'Leaderboard', href: '/leaderboard' },
         { name: 'Survey', href: '/survey' },
         { name: 'Community', href: '/community' },
       ]
     : [
         { name: 'Home', href: '/' },
+        { name: 'Leaderboard', href: '/leaderboard' },
         { name: 'Survey', href: '/survey' },
         { name: 'Community', href: '/community' },
       ];

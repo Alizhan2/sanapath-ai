@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
-from .routes import survey, community, auth
+from .routes import survey, community, auth, ai_chat
 from .routers import projects, users
 from .database import init_db
 from .config import settings
@@ -43,6 +43,7 @@ app.include_router(survey.router)
 app.include_router(community.router)
 app.include_router(projects.router)
 app.include_router(users.router)
+app.include_router(ai_chat.router)
 
 @app.get("/")
 async def root():

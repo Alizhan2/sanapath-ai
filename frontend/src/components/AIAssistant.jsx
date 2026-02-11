@@ -15,24 +15,12 @@ import {
   Lightbulb,
   Code,
   BookOpen,
-  Rocket
+  Rocket,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 
-// Predefined AI responses for demo
-const aiResponses = {
-  greetings: [
-    "Hello! I'm your AI learning assistant. I can help you with:\n\n• Understanding AI/ML concepts\n• Choosing the right project\n• Debugging your code\n• Learning resources\n\nWhat would you like to explore today?",
-  ],
-  projects: [
-    "Based on your profile, here are some project ideas:\n\n🎯 **Computer Vision**: Build an image classifier using CNN\n🗣️ **NLP**: Create a sentiment analyzer\n🤖 **Reinforcement Learning**: Train a game-playing agent\n\nWould you like details on any of these?",
-  ],
-  learning: [
-    "Here are some learning paths I recommend:\n\n📚 **Beginner**: Start with Python basics, then move to NumPy and Pandas\n🧠 **Intermediate**: Deep Learning with TensorFlow/PyTorch\n🚀 **Advanced**: Deploy models with FastAPI and Docker\n\nWhich path interests you?",
-  ],
-  help: [
-    "I can help you with many things:\n\n• **Project Ideas**: Get personalized AI project recommendations\n• **Code Help**: Debug or optimize your code\n• **Concepts**: Explain AI/ML concepts in simple terms\n• **Resources**: Find tutorials, courses, and documentation\n\nJust ask away! 🚀",
-  ]
-};
+const API_BASE = import.meta.env.VITE_API_URL || 'https://sanapath-ai.onrender.com';
 
 const quickPrompts = [
   { icon: Rocket, text: "Suggest a project", category: "projects" },
@@ -47,6 +35,7 @@ const AIAssistant = () => {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
+  const [isOnline, setIsOnline] = useState(true);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -64,31 +53,41 @@ const AIAssistant = () => {
         setMessages([{
           id: Date.now(),
           role: 'assistant',
-          content: aiResponses.greetings[0],
-          timestamp: new Date()
+          content: "Hello! 👋 I'm your SanaPath AI assistant, powered by Gemini.\n\nI can help you with:\n• 🎯 **Project Ideas** — Personalized AI project recommendations\n• 📚 **Learning Resources** — Tutorials, courses, and documentation\n• 🐛 **Code Help** — Debug errors and optimize your code\n• 🧠 **AI Concepts** — Explain ML topics in simple terms\n• 💼 **Career Advice** — Portfolio tips, interview prep\n\nWhat would you like to explore today? 🚀",
+          timestamp: new Date(),
+          source: 'gemini'
         }]);
       }, 500);
     }
   }, [isOpen]);
 
-  const getAIResponse = (userMessage) => {
-    const lowerMessage = userMessage.toLowerCase();
-    
-    if (lowerMessage.includes('project') || lowerMessage.includes('build') || lowerMessage.includes('create')) {
-      return aiResponses.projects[0];
+  const callAIAPI = async (userMessage) => {
+    try {
+      const response = await fetch(`${API_BASE}/api/ai/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMessage,
+          context: ''
+        })
+      });
+      
+      if (!response.ok) throw new Error('API error');
+      
+      const data = await response.json();
+      setIsOnline(true);
+      return { reply: data.reply, source: data.source || 'gemini' };
+    } catch (err) {
+      setIsOnline(false);
+      // Fallback to basic local response
+      return { 
+        reply: "I'm having trouble connecting right now. Please try again in a moment, or check out our Survey for personalized project recommendations!\n\n💡 Tip: You can also visit the Community page to see what other students are building.",
+        source: 'offline'
+      };
     }
-    if (lowerMessage.includes('learn') || lowerMessage.includes('tutorial') || lowerMessage.includes('course')) {
-      return aiResponses.learning[0];
-    }
-    if (lowerMessage.includes('help') || lowerMessage.includes('how') || lowerMessage.includes('what')) {
-      return aiResponses.help[0];
-    }
-    
-    // Default response
-    return "That's a great question! Let me think about it...\n\nFor more specific help, you can ask me about:\n• AI project recommendations\n• Learning resources\n• Code debugging\n• Explaining ML concepts\n\nWhat would you like to explore?";
   };
 
-  const handleSend = (text = input) => {
+  const handleSend = async (text = input) => {
     if (!text.trim()) return;
 
     const userMessage = {
@@ -102,17 +101,18 @@ const AIAssistant = () => {
     setInput('');
     setIsTyping(true);
 
-    // Simulate AI response delay
-    setTimeout(() => {
-      const aiResponse = {
-        id: Date.now() + 1,
-        role: 'assistant',
-        content: getAIResponse(text),
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, aiResponse]);
-      setIsTyping(false);
-    }, 1500);
+    // Call real AI API
+    const { reply, source } = await callAIAPI(text);
+
+    const aiResponse = {
+      id: Date.now() + 1,
+      role: 'assistant',
+      content: reply,
+      timestamp: new Date(),
+      source
+    };
+    setMessages(prev => [...prev, aiResponse]);
+    setIsTyping(false);
   };
 
   const handleQuickPrompt = (prompt) => {
@@ -164,7 +164,13 @@ const AIAssistant = () => {
                       AI Assistant
                       <Sparkles className="w-4 h-4 text-yellow-400" />
                     </h3>
-                    <p className="text-xs text-deep-blue-400">Always here to help</p>
+                    <p className="text-xs text-deep-blue-400 flex items-center gap-1">
+                      {isOnline ? (
+                        <><Wifi className="w-3 h-3 text-green-400" /> Powered by Gemini</>
+                      ) : (
+                        <><WifiOff className="w-3 h-3 text-yellow-400" /> Offline mode</>
+                      )}
+                    </p>
                   </div>
                 </div>
                 <button
@@ -297,7 +303,7 @@ const AIAssistant = () => {
                 </motion.button>
               </form>
               <p className="text-xs text-deep-blue-600 mt-2 text-center">
-                Powered by SanaPath AI ✨
+                Powered by Google Gemini ✨
               </p>
             </div>
           </motion.div>
