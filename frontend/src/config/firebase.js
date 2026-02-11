@@ -36,20 +36,46 @@ if (import.meta.env.DEV) {
   }
 }
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+// Initialize Firebase (with crash protection)
+let app, auth, googleProvider, githubProvider;
 
-// Providers
-const googleProvider = new GoogleAuthProvider();
-const githubProvider = new GithubAuthProvider();
+try {
+  if (!firebaseConfig.apiKey) {
+    console.error('Firebase API key is missing! Check environment variables.');
+  }
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  googleProvider = new GoogleAuthProvider();
+  githubProvider = new GithubAuthProvider();
+} catch (error) {
+  console.error('Firebase initialization error:', error);
+  // Create mock auth to prevent app crash
+  auth = null;
+  googleProvider = null;
+  githubProvider = null;
+}
 
-// Auth functions
-export const signInWithGoogle = () => signInWithPopup(auth, googleProvider);
-export const signInWithGithub = () => signInWithPopup(auth, githubProvider);
-export const signInWithEmail = (email, password) => signInWithEmailAndPassword(auth, email, password);
-export const signUpWithEmail = (email, password) => createUserWithEmailAndPassword(auth, email, password);
-export const logOut = () => signOut(auth);
+// Auth functions (with safety checks)
+export const signInWithGoogle = () => {
+  if (!auth) throw new Error('Firebase not initialized');
+  return signInWithPopup(auth, googleProvider);
+};
+export const signInWithGithub = () => {
+  if (!auth) throw new Error('Firebase not initialized');
+  return signInWithPopup(auth, githubProvider);
+};
+export const signInWithEmail = (email, password) => {
+  if (!auth) throw new Error('Firebase not initialized');
+  return signInWithEmailAndPassword(auth, email, password);
+};
+export const signUpWithEmail = (email, password) => {
+  if (!auth) throw new Error('Firebase not initialized');
+  return createUserWithEmailAndPassword(auth, email, password);
+};
+export const logOut = () => {
+  if (!auth) return Promise.resolve();
+  return signOut(auth);
+};
 export const updateUserProfile = (user, data) => updateProfile(user, data);
 
 export { auth, onAuthStateChanged };
