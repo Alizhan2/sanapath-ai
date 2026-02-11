@@ -20,6 +20,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import { recordActivity } from '../hooks/useRealStats';
 
 const Recommendations = ({ recommendations, userData }) => {
   const navigate = useNavigate();
@@ -57,6 +58,7 @@ const Recommendations = ({ recommendations, userData }) => {
     savedProjects.push(newProject);
     localStorage.setItem('userProjects', JSON.stringify(savedProjects));
     setStartedProjects([...startedProjects, project.title]);
+    recordActivity(1); // Track starting a project
     
     // Navigate to project detail
     navigate(`/project/${newProject.id}`);

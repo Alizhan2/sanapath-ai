@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useGlobalNotifications } from '../context/NotificationContext';
 import { NotificationCenter } from './NotificationCenter';
+import { useRealStats } from '../hooks/useRealStats';
 import { 
   BrainCircuit, 
   Menu, 
@@ -27,6 +28,7 @@ const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const { notifications, unreadCount, dismissNotification, markAsRead, clearAll } = useGlobalNotifications();
+  const { stats } = useRealStats();
 
   // Navigation links - Dashboard shown only for authenticated users
   const navLinks = isAuthenticated 
@@ -166,11 +168,11 @@ const Navbar = () => {
                           <div className="mt-3 flex items-center gap-2">
                             <div className="px-2 py-1 rounded-full bg-neon-purple-500/20 text-neon-purple-400 text-xs flex items-center gap-1">
                               <Sparkles className="w-3 h-3" />
-                              <span>1,250 XP</span>
+                              <span>{stats.xp.toLocaleString()} XP</span>
                             </div>
                             <div className="px-2 py-1 rounded-full bg-cyber-blue/20 text-cyber-blue text-xs flex items-center gap-1">
                               <Trophy className="w-3 h-3" />
-                              <span>Level 3</span>
+                              <span>Level {stats.level}</span>
                             </div>
                           </div>
                         </div>

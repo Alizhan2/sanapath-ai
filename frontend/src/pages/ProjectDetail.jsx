@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useGlobalNotifications } from '../context/NotificationContext';
+import { recordActivity, recordResourceClick } from '../hooks/useRealStats';
 import {
   ArrowLeft,
   Calendar,
@@ -21,7 +22,8 @@ import {
   Share2,
   Linkedin,
   Copy,
-  Check
+  Check,
+  Youtube
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 
@@ -65,6 +67,7 @@ const ProjectDetail = () => {
       const task = project.roadmap[weekIndex]?.tasks[taskIndex];
       const taskName = typeof task === 'object' ? task.name : task;
       notifyTaskComplete(taskName);
+      recordActivity(1); // Record activity for streak tracking
 
       // Check if entire week is now complete
       const weekTasks = project.roadmap[weekIndex]?.tasks || [];
@@ -347,38 +350,113 @@ const ProjectDetail = () => {
                                     {/* Resources */}
                                     {taskResources && taskResources.length > 0 && (
                                       <div>
-                                        <h5 className="text-xs font-semibold text-cyber-blue uppercase tracking-wider mb-2 flex items-center gap-1">
-                                          <BookOpen className="w-3 h-3" />
-                                          Learning Resources:
-                                        </h5>
-                                        <div className="flex flex-wrap gap-2">
-                                          {taskResources.map((resource, resIndex) => (
-                                            <a
-                                              key={resIndex}
-                                              href={resource.url}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-105 ${
-                                                resource.type === 'video' 
-                                                  ? 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20' 
-                                                  : resource.type === 'docs' 
-                                                  ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20'
-                                                  : resource.type === 'tutorial'
-                                                  ? 'bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20'
-                                                  : 'bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20'
-                                              }`}
-                                            >
-                                              {resource.type === 'video' && '🎬'}
-                                              {resource.type === 'docs' && '📖'}
-                                              {resource.type === 'tutorial' && '📝'}
-                                              {resource.type === 'article' && '📰'}
-                                              {resource.title}
-                                              <ExternalLink className="w-3 h-3" />
-                                            </a>
-                                          ))}
-                                        </div>
+                                        {/* Video Tutorials - prominent section */}
+                                        {taskResources.filter(r => r.type === 'video').length > 0 && (
+                                          <div className="mb-4">
+                                            <h5 className="text-xs font-semibold text-red-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                              <Youtube className="w-4 h-4" />
+                                              Video Tutorials:
+                                            </h5>
+                                            <div className="grid gap-3">
+                                              {taskResources.filter(r => r.type === 'video').map((resource, resIndex) => {
+                                                // Extract YouTube video ID for thumbnail
+                                                const videoId = resource.url?.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/)?.[1];
+                                                return (
+                                                  <a
+                                                    key={resIndex}
+                                                    href={resource.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    onClick={() => recordResourceClick(resource.url)}
+                                                    className="group flex items-center gap-3 p-3 rounded-xl bg-red-500/5 border border-red-500/20 hover:bg-red-500/15 hover:border-red-500/40 transition-all"
+                                                  >
+                                                    {/* YouTube Thumbnail */}
+                                                    {videoId ? (
+                                                      <div className="relative flex-shrink-0 w-28 h-16 rounded-lg overflow-hidden bg-deep-blue-800">
+                                                        <img 
+                                                          src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`}
+                                                          alt={resource.title}
+                                                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                                        />
+                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/10 transition-colors">
+                                                          <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center shadow-lg">
+                                                            <Play className="w-4 h-4 text-white ml-0.5" />
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                    ) : (
+                                                      <div className="flex-shrink-0 w-28 h-16 rounded-lg bg-red-500/20 flex items-center justify-center">
+                                                        <Play className="w-6 h-6 text-red-400" />
+                                                      </div>
+                                                    )}
+                                                    <div className="flex-1 min-w-0">
+                                                      <p className="text-sm font-medium text-white group-hover:text-red-300 transition-colors truncate">
+                                                        {resource.title}
+                                                      </p>
+                                                      <p className="text-xs text-deep-blue-400 mt-0.5">
+                                                        📺 Watch on YouTube
+                                                      </p>
+                                                    </div>
+                                                    <ExternalLink className="w-4 h-4 text-deep-blue-500 group-hover:text-red-400 flex-shrink-0 transition-colors" />
+                                                  </a>
+                                                );
+                                              })}
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {/* Other Resources (docs, tutorials, articles) */}
+                                        {taskResources.filter(r => r.type !== 'video').length > 0 && (
+                                          <div>
+                                            <h5 className="text-xs font-semibold text-cyber-blue uppercase tracking-wider mb-2 flex items-center gap-1">
+                                              <BookOpen className="w-3 h-3" />
+                                              Documentation & Articles:
+                                            </h5>
+                                            <div className="flex flex-wrap gap-2">
+                                              {taskResources.filter(r => r.type !== 'video').map((resource, resIndex) => (
+                                                <a
+                                                  key={resIndex}
+                                                  href={resource.url}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  onClick={() => recordResourceClick(resource.url)}
+                                                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-105 ${
+                                                    resource.type === 'docs' 
+                                                    ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20'
+                                                    : resource.type === 'tutorial'
+                                                    ? 'bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20'
+                                                    : 'bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20'
+                                                  }`}
+                                                >
+                                                  {resource.type === 'docs' && '📖'}
+                                                  {resource.type === 'tutorial' && '📝'}
+                                                  {resource.type === 'article' && '📰'}
+                                                  {resource.title}
+                                                  <ExternalLink className="w-3 h-3" />
+                                                </a>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
                                       </div>
                                     )}
+                                  </div>
+                                )}
+
+                                {/* Fallback for simple string tasks - show YouTube search link */}
+                                {!isDetailedTask && (
+                                  <div className="px-4 pb-3 border-t border-deep-blue-700/30">
+                                    <a
+                                      href={`https://www.youtube.com/results?search_query=${encodeURIComponent(taskName + ' tutorial')}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={() => recordResourceClick('youtube-search-' + taskName)}
+                                      className="inline-flex items-center gap-2 mt-3 px-3 py-2 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-all text-xs font-medium"
+                                    >
+                                      <Youtube className="w-4 h-4" />
+                                      Find Video Tutorial
+                                      <ExternalLink className="w-3 h-3" />
+                                    </a>
                                   </div>
                                 )}
                               </div>

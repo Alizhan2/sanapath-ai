@@ -25,6 +25,8 @@ const Community = () => {
 
   useEffect(() => {
     fetchProjects();
+    // Track community visit for achievement
+    localStorage.setItem('communityVisited', 'true');
   }, []);
 
   const fetchProjects = async () => {

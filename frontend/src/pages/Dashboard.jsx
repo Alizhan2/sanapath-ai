@@ -32,6 +32,7 @@ import Navbar from '../components/Navbar';
 import { ProgressRing, WeeklyProgressChart, StreakCounter, SkillBars, AnimatedCounter } from '../components/ProgressWidgets';
 import { AchievementCard, achievements as allAchievements } from '../components/Achievements';
 import { QuickActionsCompact } from '../components/QuickActions';
+import { useRealStats } from '../hooks/useRealStats';
 
 const Dashboard = () => {
   const { user, isAuthenticated, loading } = useAuth();
@@ -39,37 +40,8 @@ const Dashboard = () => {
   const [activeProjects, setActiveProjects] = useState([]);
   const [completedProjects, setCompletedProjects] = useState([]);
   const [showAchievements, setShowAchievements] = useState(false);
-  const [stats, setStats] = useState({
-    totalProjects: 0,
-    completedTasks: 0,
-    currentWeek: 1,
-    streak: 0,
-    xp: 1250,
-    level: 3
-  });
 
-  // Weekly progress data
-  const weeklyData = [
-    { day: 'Mon', value: 2.5 },
-    { day: 'Tue', value: 3 },
-    { day: 'Wed', value: 1.5 },
-    { day: 'Thu', value: 4 },
-    { day: 'Fri', value: 2 },
-    { day: 'Sat', value: 5 },
-    { day: 'Sun', value: 3 }
-  ];
-
-  // User skills
-  const userSkills = [
-    { name: 'Python', color: '#FACC15', colorEnd: '#CA8A04', level: 85 },
-    { name: 'Machine Learning', color: '#8B5CF6', colorEnd: '#7C3AED', level: 72 },
-    { name: 'Deep Learning', color: '#06B6D4', colorEnd: '#2563EB', level: 58 },
-    { name: 'NLP', color: '#4ADE80', colorEnd: '#16A34A', level: 45 },
-    { name: 'Computer Vision', color: '#F472B6', colorEnd: '#DB2777', level: 62 }
-  ];
-
-  // Unlocked achievements (based on user activity)
-  const unlockedIds = ['first_project', 'week_complete', 'three_projects'];
+  const { stats, skills, weeklyActivity, unlockedAchievementIds, recalculate } = useRealStats();
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -84,17 +56,8 @@ const Dashboard = () => {
     
     setActiveProjects(active);
     setCompletedProjects(completed);
-    
-    // Calculate stats
-    const totalTasks = savedProjects.reduce((acc, p) => acc + (p.completedTasks?.length || 0), 0);
-    setStats(prev => ({
-      ...prev,
-      totalProjects: savedProjects.length,
-      completedTasks: totalTasks,
-      currentWeek: active[0]?.currentWeek || 1,
-      streak: Math.floor(Math.random() * 7) + 1 // Demo streak
-    }));
-  }, [isAuthenticated, loading, navigate]);
+    recalculate();
+  }, [isAuthenticated, loading, navigate, recalculate]);
 
   const handleDeleteProject = (projectId) => {
     const savedProjects = JSON.parse(localStorage.getItem('userProjects') || '[]');
@@ -103,6 +66,7 @@ const Dashboard = () => {
     
     setActiveProjects(updated.filter(p => p.status !== 'completed'));
     setCompletedProjects(updated.filter(p => p.status === 'completed'));
+    recalculate();
   };
 
   const handleToggleStatus = (projectId) => {
@@ -230,7 +194,7 @@ const Dashboard = () => {
                     <Award className="w-6 h-6 text-orange-400" />
                   </div>
                   <p className="text-2xl font-bold text-white">
-                    <AnimatedCounter value={unlockedIds.length} />/{allAchievements.length}
+                    <AnimatedCounter value={unlockedAchievementIds.length} />/{allAchievements.length}
                   </p>
                   <p className="text-sm text-deep-blue-400">Achievements</p>
                 </div>
@@ -312,13 +276,13 @@ const Dashboard = () => {
                             <div className="mb-2">
                               <div className="flex justify-between text-xs text-deep-blue-400 mb-1">
                                 <span>Progress</span>
-                                <span>{Math.round(((project.currentWeek || 1) / 4) * 100)}%</span>
+                                <span>{(() => { const ct = project.completedTasks || {}; const total = project.roadmap?.reduce((a,w) => a + (w.tasks?.length || 0), 0) || 1; const done = Object.values(ct).filter(Boolean).length; return Math.round((done/total)*100); })()}%</span>
                               </div>
                               <div className="h-2 bg-deep-blue-800 rounded-full overflow-hidden">
                                 <motion.div 
                                   className="h-full bg-gradient-to-r from-neon-purple-500 to-cyber-blue rounded-full"
                                   initial={{ width: 0 }}
-                                  animate={{ width: `${((project.currentWeek || 1) / 4) * 100}%` }}
+                                  animate={{ width: `${(() => { const ct = project.completedTasks || {}; const total = project.roadmap?.reduce((a,w) => a + (w.tasks?.length || 0), 0) || 1; const done = Object.values(ct).filter(Boolean).length; return Math.round((done/total)*100); })()}%` }}
                                   transition={{ duration: 1, ease: "easeOut" }}
                                 />
                               </div>
@@ -370,7 +334,7 @@ const Dashboard = () => {
                   <BarChart3 className="w-5 h-5 text-cyber-blue" />
                   Weekly Activity
                 </h3>
-                <WeeklyProgressChart data={weeklyData} />
+                <WeeklyProgressChart data={weeklyActivity} />
               </motion.div>
             </div>
 
@@ -417,7 +381,7 @@ const Dashboard = () => {
                   <Zap className="w-5 h-5 text-cyber-blue" />
                   Your Skills
                 </h3>
-                <SkillBars skills={userSkills} />
+                <SkillBars skills={skills.length > 0 ? skills : [{ name: 'Start a project to track skills', color: '#8B5CF6', colorEnd: '#7C3AED', level: 0 }]} />
               </motion.div>
 
               {/* Achievements Preview */}
@@ -440,7 +404,7 @@ const Dashboard = () => {
                   </button>
                 </div>
                 <div className="space-y-3">
-                  {allAchievements.filter(a => unlockedIds.includes(a.id)).slice(0, 3).map((achievement) => (
+                  {allAchievements.filter(a => unlockedAchievementIds.includes(a.id)).slice(0, 3).map((achievement) => (
                     <div 
                       key={achievement.id}
                       className="flex items-center gap-3 p-3 rounded-lg bg-deep-blue-800/30"
@@ -504,7 +468,7 @@ const Dashboard = () => {
                   <AchievementCard
                     key={achievement.id}
                     achievement={achievement}
-                    isUnlocked={unlockedIds.includes(achievement.id)}
+                    isUnlocked={unlockedAchievementIds.includes(achievement.id)}
                   />
                 ))}
               </div>
