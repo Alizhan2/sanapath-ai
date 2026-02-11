@@ -50,26 +50,26 @@ const Dashboard = () => {
 
   // Weekly progress data
   const weeklyData = [
-    { day: 'Mon', hours: 2.5 },
-    { day: 'Tue', hours: 3 },
-    { day: 'Wed', hours: 1.5 },
-    { day: 'Thu', hours: 4 },
-    { day: 'Fri', hours: 2 },
-    { day: 'Sat', hours: 5 },
-    { day: 'Sun', hours: 3 }
+    { day: 'Mon', value: 2.5 },
+    { day: 'Tue', value: 3 },
+    { day: 'Wed', value: 1.5 },
+    { day: 'Thu', value: 4 },
+    { day: 'Fri', value: 2 },
+    { day: 'Sat', value: 5 },
+    { day: 'Sun', value: 3 }
   ];
 
   // User skills
   const userSkills = [
-    { name: 'Python', level: 85, color: 'from-yellow-400 to-yellow-600' },
-    { name: 'Machine Learning', level: 72, color: 'from-neon-purple-400 to-neon-purple-600' },
-    { name: 'Deep Learning', level: 58, color: 'from-cyber-blue to-blue-600' },
-    { name: 'NLP', level: 45, color: 'from-green-400 to-green-600' },
-    { name: 'Computer Vision', level: 62, color: 'from-pink-400 to-pink-600' }
+    { name: 'Python', color: '#FACC15', colorEnd: '#CA8A04', level: 85 },
+    { name: 'Machine Learning', color: '#8B5CF6', colorEnd: '#7C3AED', level: 72 },
+    { name: 'Deep Learning', color: '#06B6D4', colorEnd: '#2563EB', level: 58 },
+    { name: 'NLP', color: '#4ADE80', colorEnd: '#16A34A', level: 45 },
+    { name: 'Computer Vision', color: '#F472B6', colorEnd: '#DB2777', level: 62 }
   ];
 
   // Unlocked achievements (based on user activity)
-  const unlockedIds = ['first_launch', 'week_warrior', 'project_pro'];
+  const unlockedIds = ['first_project', 'week_complete', 'three_projects'];
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -392,8 +392,9 @@ const Dashboard = () => {
                     progress={(stats.xp % 500) / 500 * 100} 
                     size={100} 
                     strokeWidth={8}
-                    label={`Level ${stats.level}`}
-                  />
+                  >
+                    <span className="text-white font-bold text-sm">Level {stats.level}</span>
+                  </ProgressRing>
                   <div>
                     <p className="text-white font-semibold">{stats.xp} XP</p>
                     <p className="text-sm text-deep-blue-400">{500 - (stats.xp % 500)} XP to Level {stats.level + 1}</p>
@@ -444,12 +445,12 @@ const Dashboard = () => {
                       key={achievement.id}
                       className="flex items-center gap-3 p-3 rounded-lg bg-deep-blue-800/30"
                     >
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-neon-purple-500/20 to-cyber-blue/20 flex items-center justify-center text-xl">
-                        {achievement.icon}
+                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${achievement.color} flex items-center justify-center`}>
+                        <achievement.icon className="w-5 h-5 text-white" />
                       </div>
                       <div>
                         <p className="text-white font-medium text-sm">{achievement.title}</p>
-                        <p className="text-xs text-deep-blue-400">+{achievement.xp} XP</p>
+                        <p className="text-xs text-deep-blue-400">+{achievement.points} XP</p>
                       </div>
                     </div>
                   ))}
@@ -503,7 +504,7 @@ const Dashboard = () => {
                   <AchievementCard
                     key={achievement.id}
                     achievement={achievement}
-                    unlocked={unlockedIds.includes(achievement.id)}
+                    isUnlocked={unlockedIds.includes(achievement.id)}
                   />
                 ))}
               </div>

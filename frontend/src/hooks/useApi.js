@@ -1,7 +1,7 @@
 /**
  * Custom hooks for API interactions
  */
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ApiError } from '../services/api';
 
 /**
@@ -85,7 +85,7 @@ export function usePagination(initialPage = 1, initialPerPage = 10) {
 export function useDebounce(value, delay = 300) {
     const [debouncedValue, setDebouncedValue] = useState(value);
 
-    useState(() => {
+    useEffect(() => {
         const handler = setTimeout(() => {
             setDebouncedValue(value);
         }, delay);

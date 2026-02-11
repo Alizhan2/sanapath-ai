@@ -1,12 +1,10 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { Loader2 } from 'lucide-react';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { handleAuthCallback } = useAuth();
 
   useEffect(() => {
     const token = searchParams.get('token');
@@ -19,12 +17,13 @@ const AuthCallback = () => {
     }
 
     if (token) {
-      handleAuthCallback(token);
-      navigate('/survey');
+      // Store the token from OAuth callback
+      localStorage.setItem('token', token);
+      navigate('/dashboard');
     } else {
       navigate('/login');
     }
-  }, [searchParams, handleAuthCallback, navigate]);
+  }, [searchParams, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-hero-pattern">

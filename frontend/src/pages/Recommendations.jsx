@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -29,7 +29,7 @@ const Recommendations = ({ recommendations, userData }) => {
   const [startedProjects, setStartedProjects] = useState([]);
 
   // Load started projects on mount
-  useState(() => {
+  useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('userProjects') || '[]');
     setStartedProjects(saved.map(p => p.title));
   }, []);
@@ -119,7 +119,8 @@ ${techTags} #AI #MachineLearning #SanaPathAI #AISana #BuildInPublic
     setPublishingProject(project.title);
     
     try {
-      const response = await fetch('http://localhost:8001/api/community/publish', {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${API_URL}/api/community/publish`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

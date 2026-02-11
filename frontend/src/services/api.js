@@ -3,7 +3,7 @@
  * Handles all backend communication with error handling
  */
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 // Custom API Error class
 export class ApiError extends Error {

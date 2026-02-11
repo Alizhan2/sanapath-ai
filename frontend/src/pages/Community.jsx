@@ -29,7 +29,8 @@ const Community = () => {
 
   const fetchProjects = async () => {
     try {
-      const response = await fetch('http://localhost:8001/api/community/projects');
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${API_URL}/api/community/projects`);
       if (response.ok) {
         const data = await response.json();
         setProjects(data);
@@ -98,7 +99,8 @@ const Community = () => {
 
   const handleJoinProject = async (projectId) => {
     try {
-      const response = await fetch(`http://localhost:8001/api/community/projects/${projectId}/join?member_name=Demo User&member_email=demo@example.com`, {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${API_URL}/api/community/projects/${projectId}/join?member_name=Demo User&member_email=demo@example.com`, {
         method: 'POST'
       });
       if (response.ok) {

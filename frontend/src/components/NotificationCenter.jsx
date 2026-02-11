@@ -281,4 +281,5 @@ export const useNotifications = () => {
   };
 };
 
+export { NotificationCenter };
 export default NotificationCenter;
