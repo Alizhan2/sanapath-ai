@@ -1,0 +1,16 @@
+# Netlify Configuration - Frontend Only (Backend is on Render)
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = "dist"
+
+# SPA routing - redirect all routes to index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Environment variables for build
+[build.environment]
+  NODE_VERSION = "20"
+  VITE_API_URL = "https://sanapath-ai.onrender.com"
