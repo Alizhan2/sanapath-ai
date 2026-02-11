@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useGlobalNotifications } from '../context/NotificationContext';
 import {
   ArrowLeft,
   Calendar,
@@ -17,17 +18,22 @@ import {
   Pause,
   BookOpen,
   ExternalLink,
-  Share2
+  Share2,
+  Linkedin,
+  Copy,
+  Check
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 
 const ProjectDetail = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
+  const { notifyTaskComplete, notifyWeekComplete, notifyLinkedInPost } = useGlobalNotifications();
   const [project, setProject] = useState(null);
   const [expandedWeek, setExpandedWeek] = useState(0);
   const [completedTasks, setCompletedTasks] = useState({});
+  const [linkedInCopied, setLinkedInCopied] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -50,8 +56,23 @@ const ProjectDetail = () => {
 
   const handleTaskToggle = (weekIndex, taskIndex) => {
     const key = `${weekIndex}-${taskIndex}`;
+    const wasCompleted = completedTasks[key];
     const updated = { ...completedTasks, [key]: !completedTasks[key] };
     setCompletedTasks(updated);
+
+    // Send notification for completing a task
+    if (!wasCompleted) {
+      const task = project.roadmap[weekIndex]?.tasks[taskIndex];
+      const taskName = typeof task === 'object' ? task.name : task;
+      notifyTaskComplete(taskName);
+
+      // Check if entire week is now complete
+      const weekTasks = project.roadmap[weekIndex]?.tasks || [];
+      const allDone = weekTasks.every((_, i) => i === taskIndex ? true : updated[`${weekIndex}-${i}`]);
+      if (allDone) {
+        notifyWeekComplete(weekIndex + 1, project.title);
+      }
+    }
 
     // Save to localStorage
     const savedProjects = JSON.parse(localStorage.getItem('userProjects') || '[]');
@@ -156,6 +177,36 @@ const ProjectDetail = () => {
                   transition={{ duration: 0.5 }}
                 />
               </div>
+            </div>
+
+            {/* LinkedIn Share */}
+            <div className="mt-4 flex gap-3">
+              <button
+                onClick={() => {
+                  const progress = getTotalProgress();
+                  const text = `🚀 I'm working on "${project.title}" using SanaPath AI!\n\n📊 Progress: ${progress}%\n🛠 Tech: ${project.tech_stack?.join(', ')}\n\n${progress >= 100 ? '✅ Project completed!' : `Currently on Week ${Math.min(4, Math.floor(progress / 25) + 1)} of 4.`}\n\n#SanaPathAI #BuildInPublic #LearningInPublic #${project.tech_stack?.[0]?.replace(/[^a-zA-Z]/g, '') || 'Tech'}`;
+                  const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://sanapath-ai.netlify.app')}&summary=${encodeURIComponent(text)}`;
+                  window.open(linkedInUrl, '_blank', 'width=600,height=600');
+                  notifyLinkedInPost(project.title);
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#0077B5]/20 text-[#0077B5] border border-[#0077B5]/30 hover:bg-[#0077B5]/30 transition-colors text-sm font-medium"
+              >
+                <Linkedin className="w-4 h-4" />
+                Share on LinkedIn
+              </button>
+              <button
+                onClick={() => {
+                  const progress = getTotalProgress();
+                  const text = `🚀 I'm working on "${project.title}" using SanaPath AI!\n\n📊 Progress: ${progress}%\n🛠 Tech: ${project.tech_stack?.join(', ')}\n\n${progress >= 100 ? '✅ Project completed!' : `Currently on Week ${Math.min(4, Math.floor(progress / 25) + 1)} of 4.`}\n\nhttps://sanapath-ai.netlify.app\n\n#SanaPathAI #BuildInPublic`;
+                  navigator.clipboard.writeText(text);
+                  setLinkedInCopied(true);
+                  setTimeout(() => setLinkedInCopied(false), 2000);
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-deep-blue-700/50 text-deep-blue-200 border border-deep-blue-600/30 hover:bg-deep-blue-700 transition-colors text-sm font-medium"
+              >
+                {linkedInCopied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                {linkedInCopied ? 'Copied!' : 'Copy Post Text'}
+              </button>
             </div>
           </motion.div>
 

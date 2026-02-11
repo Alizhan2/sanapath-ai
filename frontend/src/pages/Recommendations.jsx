@@ -354,10 +354,24 @@ ${techTags} #AI #MachineLearning #SanaPathAI #AISana #BuildInPublic
                               </>
                             ) : (
                               <>
-                                <Linkedin className="w-4 h-4" />
-                                Copy LinkedIn Post
+                                <Copy className="w-4 h-4" />
+                                Copy Post
                               </>
                             )}
+                          </motion.button>
+
+                          <motion.button
+                            onClick={async () => {
+                              const post = await generateLinkedInPost(project);
+                              const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://sanapath-ai.netlify.app')}&summary=${encodeURIComponent(post)}`;
+                              window.open(linkedInUrl, '_blank', 'width=600,height=600');
+                            }}
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0077B5] text-white font-medium hover:bg-[#0077B5]/80 transition-all"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <Linkedin className="w-4 h-4" />
+                            Share on LinkedIn
                           </motion.button>
 
                           <motion.button

@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { NotificationCenter, useNotifications } from './NotificationCenter';
+import { useGlobalNotifications } from '../context/NotificationContext';
+import { NotificationCenter } from './NotificationCenter';
 import { 
   BrainCircuit, 
   Menu, 
@@ -25,7 +26,7 @@ const Navbar = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
-  const { notifications, unreadCount, dismissNotification, markAsRead, clearAll } = useNotifications();
+  const { notifications, unreadCount, dismissNotification, markAsRead, clearAll } = useGlobalNotifications();
 
   // Navigation links - Dashboard shown only for authenticated users
   const navLinks = isAuthenticated 
@@ -115,7 +116,7 @@ const Navbar = () => {
                     onClose={() => setShowNotifications(false)}
                     notifications={notifications}
                     onDismiss={dismissNotification}
-                    onMarkAsRead={markAsRead}
+                    onRead={markAsRead}
                     onClearAll={clearAll}
                   />
                 </div>

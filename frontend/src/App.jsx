@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useState } from 'react';
 import { AuthProvider } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
 import { ProtectedRoute, PublicOnlyRoute } from './components/ProtectedRoute';
 import { ToastProvider } from './components/Toast';
 import AIAssistant from './components/AIAssistant';
@@ -25,6 +26,7 @@ function App() {
 
   return (
     <AuthProvider>
+      <NotificationProvider>
       <ToastProvider>
         <Router>
           <div className="min-h-screen bg-hero-pattern">
@@ -114,6 +116,7 @@ function App() {
           </div>
         </Router>
       </ToastProvider>
+      </NotificationProvider>
     </AuthProvider>
   );
 }
