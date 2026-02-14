@@ -169,17 +169,46 @@ export const useRealStats = () => {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const today = new Date();
     const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon...
-    
+
+    // Merge roadmap task activity — count done tasks by their due date as supplementary data
+    const roadmapRaw = JSON.parse(localStorage.getItem('sanapath_roadmap') || '[]');
+    const taskDateActivity = {};
+    roadmapRaw.forEach(step => {
+      (step.tasks || []).forEach(t => {
+        if (t.status === 'done' && t.due) {
+          const dueKey = t.due.split('T')[0];
+          taskDateActivity[dueKey] = (taskDateActivity[dueKey] || 0) + 1;
+        }
+      });
+    });
+
     const weeklyData = days.map((day, i) => {
       const targetDayOffset = (i + 1) - (dayOfWeek === 0 ? 7 : dayOfWeek); // Mon=1
       const targetDate = new Date(today);
       targetDate.setDate(today.getDate() + targetDayOffset);
       const dateKey = targetDate.toISOString().split('T')[0];
-      return { day, value: activityLog[dateKey] || 0 };
+      // Combine explicit activity log + task-based activity
+      const logValue = activityLog[dateKey] || 0;
+      const taskValue = taskDateActivity[dateKey] || 0;
+      return { day, value: Math.max(logValue, taskValue) };
     });
+
+    // If all zero (no activity at all), show sample baseline so chart isn't empty
+    const hasAnyActivity = weeklyData.some(d => d.value > 0) || completedTasks > 0;
+    if (!hasAnyActivity && totalProjects > 0) {
+      // Show at least some baseline activity for users who have projects
+      const todayIdx = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      weeklyData[todayIdx].value = 1;
+    }
+
     setWeeklyActivity(weeklyData);
 
     // --- Achievements ---
+    // Also compute roadmap progress for achievement tracking
+    const rdTasks = roadmapRaw.flatMap(s => s.tasks || []);
+    const rdDone = rdTasks.filter(t => t.status === 'done').length;
+    const roadmapProgress = rdTasks.length > 0 ? Math.round((rdDone / rdTasks.length) * 100) : 0;
+
     const achievementStats = {
       totalProjects,
       completedTasks,
@@ -188,6 +217,7 @@ export const useRealStats = () => {
       joinedCommunity: communityVisited,
       completedProjects,
       resourcesUsed,
+      roadmapProgress,
     };
 
     // Import achievement conditions inline
@@ -195,17 +225,36 @@ export const useRealStats = () => {
       'first_project': achievementStats.totalProjects >= 1,
       'week_complete': achievementStats.completedWeeks >= 1,
       'three_projects': achievementStats.totalProjects >= 3,
+      'streak_3': achievementStats.streak >= 3,
       'streak_7': achievementStats.streak >= 7,
+      'five_tasks': achievementStats.completedTasks >= 5,
       'ten_tasks': achievementStats.completedTasks >= 10,
+      'twenty_tasks': achievementStats.completedTasks >= 20,
       'community_join': achievementStats.joinedCommunity,
       'first_complete': achievementStats.completedProjects >= 1,
       'code_master': achievementStats.completedTasks >= 50,
       'scholar': achievementStats.resourcesUsed >= 20,
+      'streak_30': achievementStats.streak >= 30,
+      'five_projects': achievementStats.totalProjects >= 5,
+      'roadmap_half': achievementStats.roadmapProgress >= 50,
+      'roadmap_complete': achievementStats.roadmapProgress >= 100,
     };
 
     const unlocked = Object.entries(achievementConditions)
       .filter(([_, met]) => met)
       .map(([id]) => id);
+
+    // Detect newly unlocked achievements and emit events for toasts
+    const prevUnlocked = JSON.parse(localStorage.getItem('sanapath_unlocked_achievements') || '[]');
+    const newlyUnlocked = unlocked.filter(id => !prevUnlocked.includes(id));
+    if (newlyUnlocked.length > 0) {
+      localStorage.setItem('sanapath_unlocked_achievements', JSON.stringify(unlocked));
+      newlyUnlocked.forEach(id => {
+        window.dispatchEvent(new CustomEvent('achievementUnlocked', { detail: { id } }));
+      });
+    } else if (unlocked.length !== prevUnlocked.length) {
+      localStorage.setItem('sanapath_unlocked_achievements', JSON.stringify(unlocked));
+    }
 
     setUnlockedAchievementIds(unlocked);
 

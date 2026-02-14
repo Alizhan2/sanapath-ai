@@ -133,6 +133,33 @@ const achievementsList = [
     color: 'from-amber-400 to-yellow-500',
     unlockCondition: (stats) => stats.roadmapProgress >= 100
   },
+  {
+    id: 'streak_3',
+    icon: Flame,
+    title: 'Getting Started',
+    description: 'Maintain a 3-day streak',
+    points: 100,
+    color: 'from-orange-400 to-amber-500',
+    unlockCondition: (stats) => stats.streak >= 3
+  },
+  {
+    id: 'five_tasks',
+    icon: CheckCircle2,
+    title: 'Productive',
+    description: 'Complete 5 tasks',
+    points: 150,
+    color: 'from-emerald-500 to-green-500',
+    unlockCondition: (stats) => stats.completedTasks >= 5
+  },
+  {
+    id: 'twenty_tasks',
+    icon: Zap,
+    title: 'Power User',
+    description: 'Complete 20 tasks',
+    points: 400,
+    color: 'from-blue-500 to-violet-500',
+    unlockCondition: (stats) => stats.completedTasks >= 20
+  },
 ];
 
 const AchievementCard = ({ achievement, isUnlocked, progress }) => {
@@ -140,40 +167,66 @@ const AchievementCard = ({ achievement, isUnlocked, progress }) => {
   
   return (
     <motion.div
-      className={`relative p-4 rounded-xl border transition-all ${
+      className={`relative p-4 rounded-xl border transition-all overflow-hidden ${
         isUnlocked 
           ? 'bg-deep-blue-800/50 border-neon-purple-500/30 shadow-lg shadow-neon-purple-500/10' 
           : 'bg-deep-blue-900/30 border-deep-blue-700/30 opacity-60'
       }`}
-      whileHover={{ scale: isUnlocked ? 1.02 : 1, y: isUnlocked ? -2 : 0 }}
+      whileHover={{ scale: isUnlocked ? 1.03 : 1, y: isUnlocked ? -3 : 0 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 25 }}
     >
-      {/* Glow effect for unlocked */}
+      {/* Animated gradient glow for unlocked */}
       {isUnlocked && (
-        <div className="absolute inset-0 bg-gradient-to-r opacity-10 rounded-xl" 
-             style={{ backgroundImage: `linear-gradient(to right, var(--tw-gradient-stops))` }} />
+        <motion.div
+          className="absolute inset-0 rounded-xl"
+          style={{
+            background: `linear-gradient(135deg, transparent 0%, rgba(139, 92, 246, 0.08) 50%, transparent 100%)`,
+          }}
+          animate={{ opacity: [0.3, 0.6, 0.3] }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      )}
+
+      {/* Shine sweep effect for unlocked */}
+      {isUnlocked && (
+        <motion.div
+          className="absolute inset-0 rounded-xl"
+          style={{
+            background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.08) 45%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.08) 55%, transparent 60%)',
+            backgroundSize: '200% 100%',
+          }}
+          animate={{ backgroundPosition: ['200% 0%', '-200% 0%'] }}
+          transition={{ duration: 4, repeat: Infinity, ease: 'linear', repeatDelay: 2 }}
+        />
       )}
       
-      <div className="flex items-start gap-3">
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-          isUnlocked 
-            ? `bg-gradient-to-br ${achievement.color}` 
-            : 'bg-deep-blue-700/50'
-        }`}>
+      <div className="relative flex items-start gap-3">
+        <motion.div
+          className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+            isUnlocked 
+              ? `bg-gradient-to-br ${achievement.color} shadow-lg` 
+              : 'bg-deep-blue-700/50'
+          }`}
+          style={isUnlocked ? { boxShadow: `0 4px 15px rgba(139, 92, 246, 0.3)` } : {}}
+          whileHover={isUnlocked ? { rotate: [0, -10, 10, 0], transition: { duration: 0.5 } } : {}}
+        >
           {isUnlocked ? (
-            <Icon className="w-6 h-6 text-white" />
+            <Icon className="w-6 h-6 text-white drop-shadow-sm" />
           ) : (
             <Lock className="w-5 h-5 text-deep-blue-500" />
           )}
-        </div>
+        </motion.div>
         
-        <div className="flex-1">
-          <div className="flex items-center justify-between">
-            <h4 className={`font-semibold ${isUnlocked ? 'text-white' : 'text-deep-blue-400'}`}>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <h4 className={`font-semibold truncate ${isUnlocked ? 'text-white' : 'text-deep-blue-400'}`}>
               {achievement.title}
             </h4>
-            <span className={`text-xs px-2 py-0.5 rounded-full ${
+            <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
               isUnlocked 
-                ? 'bg-neon-purple-500/20 text-neon-purple-400' 
+                ? 'bg-neon-purple-500/20 text-neon-purple-400 font-medium' 
                 : 'bg-deep-blue-700/50 text-deep-blue-500'
             }`}>
               +{achievement.points} XP
@@ -188,26 +241,36 @@ const AchievementCard = ({ achievement, isUnlocked, progress }) => {
             <div className="mt-2">
               <div className="h-1.5 bg-deep-blue-700 rounded-full overflow-hidden">
                 <motion.div 
-                  className="h-full bg-deep-blue-500 rounded-full"
+                  className={`h-full rounded-full bg-gradient-to-r ${achievement.color}`}
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min(progress, 100)}%` }}
-                  transition={{ duration: 0.5 }}
+                  transition={{ duration: 0.8, ease: 'easeOut' }}
                 />
               </div>
-              <p className="text-xs text-deep-blue-500 mt-1">{Math.round(progress)}% complete</p>
+              <p className="text-xs text-deep-blue-500 mt-1">{Math.round(Math.min(progress, 100))}% complete</p>
             </div>
           )}
         </div>
       </div>
       
+      {/* Unlocked badge with pulse animation */}
       {isUnlocked && (
         <motion.div
           className="absolute top-2 right-2"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', delay: 0.2 }}
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 15, delay: 0.3 }}
         >
-          <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+          <div className="relative">
+            <Star className="w-5 h-5 text-yellow-400 fill-yellow-400 drop-shadow-sm" />
+            <motion.div
+              className="absolute inset-0"
+              animate={{ scale: [1, 1.4, 1], opacity: [1, 0, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <Star className="w-5 h-5 text-yellow-400/30 fill-yellow-400/30" />
+            </motion.div>
+          </div>
         </motion.div>
       )}
     </motion.div>
@@ -239,10 +302,16 @@ const Achievements = ({ stats = {} }) => {
         return (defaultStats.totalProjects / (achievement.id === 'first_project' ? 1 : 3)) * 100;
       case 'five_projects':
         return (defaultStats.totalProjects / 5) * 100;
+      case 'five_tasks':
+        return (defaultStats.completedTasks / 5) * 100;
       case 'ten_tasks':
         return (defaultStats.completedTasks / 10) * 100;
+      case 'twenty_tasks':
+        return (defaultStats.completedTasks / 20) * 100;
       case 'code_master':
         return (defaultStats.completedTasks / 50) * 100;
+      case 'streak_3':
+        return (defaultStats.streak / 3) * 100;
       case 'streak_7':
         return (defaultStats.streak / 7) * 100;
       case 'streak_30':

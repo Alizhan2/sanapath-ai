@@ -2,12 +2,14 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useState, lazy, Suspense } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { ProtectedRoute, PublicOnlyRoute } from './components/ProtectedRoute';
 import { ToastProvider } from './components/Toast';
 import AIAssistant from './components/AIAssistant';
 import OnboardingTour from './components/OnboardingTour';
 import ErrorBoundary from './components/ErrorBoundary';
 import PageSkeleton from './components/PageSkeleton';
+import CommandPalette from './components/CommandPalette';
 
 // Lazy-loaded pages — code-split for faster initial load
 const Landing = lazy(() => import('./pages/Landing'));
@@ -41,6 +43,7 @@ function App() {
 
   return (
     <AuthProvider>
+      <ThemeProvider>
       <NotificationProvider>
       <ToastProvider>
         <Router>
@@ -167,12 +170,16 @@ function App() {
             {/* Global AI Assistant */}
             <AIAssistant />
             
+            {/* Command Palette (Ctrl+K) */}
+            <CommandPalette />
+            
             {/* Onboarding Tour for new users */}
             <OnboardingTour />
           </div>
         </Router>
       </ToastProvider>
       </NotificationProvider>
+      </ThemeProvider>
     </AuthProvider>
   );
 }

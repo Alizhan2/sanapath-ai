@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import {
@@ -27,6 +28,7 @@ import {
 
 const Settings = () => {
   const { user, logout } = useAuth();
+  const { theme: currentTheme, setTheme: applyTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('profile');
   const [saveStatus, setSaveStatus] = useState(null);
   
@@ -52,7 +54,7 @@ const Settings = () => {
     showAchievements: true,
     
     // Appearance
-    theme: 'dark',
+    theme: currentTheme,
     reducedMotion: false,
     soundEffects: true,
     
@@ -60,6 +62,11 @@ const Settings = () => {
     language: 'en',
     timezone: 'UTC'
   });
+
+  // Sync theme changes to ThemeContext immediately
+  useEffect(() => {
+    applyTheme(settings.theme);
+  }, [settings.theme, applyTheme]);
 
   const handleChange = (key, value) => {
     setSettings(prev => ({ ...prev, [key]: value }));

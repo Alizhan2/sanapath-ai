@@ -38,6 +38,18 @@ const Dashboard = () => {
     return () => window.removeEventListener('taskCompleted', handleTaskDone);
   }, [toast]);
 
+  // Toast on achievement unlock
+  useEffect(() => {
+    const handleAchievement = (e) => {
+      const found = allAchievements.find(a => a.id === e.detail.id);
+      if (found) {
+        toast.success(`🏆 Achievement Unlocked: ${found.title} (+${found.points} XP)`);
+      }
+    };
+    window.addEventListener('achievementUnlocked', handleAchievement);
+    return () => window.removeEventListener('achievementUnlocked', handleAchievement);
+  }, [toast]);
+
   useEffect(() => {
     if (!loading && !isAuthenticated) { navigate('/login'); return; }
     const saved = JSON.parse(localStorage.getItem('userProjects') || '[]');
@@ -196,20 +208,26 @@ const Dashboard = () => {
               <h3 className="text-sm font-medium text-deep-blue-400 mb-4 flex items-center gap-2"><Target className="w-4 h-4 text-cyber-blue" /> This Week's Focus</h3>
               <div className="space-y-2.5">
                 {weekTasks.slice(0, 4).map((t) => (
-                  <div key={t.id} className="flex items-center gap-3 group cursor-pointer" onClick={() => toggleTaskStatus(t.id)}>
-                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                      t.status === 'done' ? 'bg-green-500 border-green-500' : 'border-deep-blue-600 group-hover:border-neon-purple-500'
-                    }`}>
+                  <div key={t.id} className="flex items-center gap-3 group">
+                    <div
+                      className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors cursor-pointer ${
+                        t.status === 'done' ? 'bg-green-500 border-green-500' : 'border-deep-blue-600 group-hover:border-neon-purple-500'
+                      }`}
+                      onClick={() => toggleTaskStatus(t.id)}
+                    >
                       {t.status === 'done' && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
                     </div>
                     <span className={`text-sm flex-1 ${t.status === 'done' ? 'text-deep-blue-500 line-through' : 'text-white'}`}>{t.title}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs ${
-                      t.status === 'done' ? 'bg-green-500/20 text-green-400' :
-                      t.status === 'in-progress' ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-deep-blue-700 text-deep-blue-300'
-                    }`}>
-                      {t.status === 'done' ? 'Done' : t.status === 'in-progress' ? 'In Progress' : 'To Do'}
-                    </span>
+                    {t.status !== 'done' ? (
+                      <button
+                        onClick={() => toggleTaskStatus(t.id)}
+                        className="px-2.5 py-1 rounded-lg text-xs font-medium bg-green-500/15 text-green-400 hover:bg-green-500/25 border border-green-500/20 opacity-0 group-hover:opacity-100 transition-all flex items-center gap-1"
+                      >
+                        <CheckCircle2 className="w-3 h-3" /> Done
+                      </button>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full text-xs bg-green-500/20 text-green-400">Done</span>
+                    )}
                   </div>
                 ))}
                 {weekTasks.length === 0 && <p className="text-xs text-deep-blue-500">No tasks this week</p>}
