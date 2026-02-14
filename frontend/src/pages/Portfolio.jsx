@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import DashboardLayout from '../components/DashboardLayout';
 import {
-  Github, ExternalLink, Star, GitFork, Eye, Code2,
+  Github, ExternalLink, Star, GitFork, Code2,
   Award, Sparkles, ArrowUpRight, Calendar
 } from 'lucide-react';
 

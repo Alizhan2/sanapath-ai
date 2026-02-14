@@ -12,7 +12,6 @@ import {
   TrendingUp,
   CheckCircle2,
   Star,
-  Users,
   BrainCircuit,
   Calendar,
   Briefcase,

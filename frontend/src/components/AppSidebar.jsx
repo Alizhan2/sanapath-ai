@@ -15,9 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   BrainCircuit,
-  Trophy,
   Flame,
-  User,
   LogOut
 } from 'lucide-react';
 
@@ -29,12 +27,12 @@ const sidebarLinks = [
   { name: 'Surveys', href: '/weekly-checkin', icon: ClipboardList },
   { name: 'Skills', href: '/skills', icon: Sparkles },
   { name: 'Portfolio', href: '/portfolio', icon: Briefcase },
-  { name: 'Settings', href: '/goals', icon: Settings },
+  { name: 'Goals & Settings', href: '/goals', icon: Settings },
 ];
 
 const AppSidebar = ({ collapsed, setCollapsed }) => {
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { stats } = useRealStats();
 
   return (

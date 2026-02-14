@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import DashboardLayout from '../components/DashboardLayout';
 import {
   CheckCircle2, Circle, Clock, Tag, Calendar, ChevronRight,
-  X, FileText, Timer, CheckSquare, Filter, Search
+  X, FileText, Timer, CheckSquare, Search
 } from 'lucide-react';
 
 const demoTasks = [

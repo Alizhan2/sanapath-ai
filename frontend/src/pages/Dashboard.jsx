@@ -7,10 +7,10 @@ import DashboardLayout from '../components/DashboardLayout';
 import { ProgressRing, WeeklyProgressChart, StreakCounter, SkillBars, AnimatedCounter } from '../components/ProgressWidgets';
 import { AchievementCard, achievements as allAchievements } from '../components/Achievements';
 import {
-  User, Rocket, Target, Calendar, CheckCircle2, Clock, Play, Pause,
-  Trash2, Plus, TrendingUp, Award, ChevronRight, Sparkles, Brain,
-  Zap, Flame, Star, Gift, BarChart3, Github, Linkedin, Map,
-  ArrowRight, ExternalLink
+  User, Rocket, Target, Calendar, CheckCircle2, Clock,
+  Plus, Award, ChevronRight, Sparkles, Brain,
+  Flame, Star, BarChart3, Github, Linkedin, Map,
+  ArrowRight
 } from 'lucide-react';
 
 const Dashboard = () => {

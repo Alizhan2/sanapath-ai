@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import DashboardLayout from '../components/DashboardLayout';
 import {
   ChevronRight, BookOpen, Code2, Rocket, Award,
-  Clock, Flame, Target, Zap, ExternalLink
+  Clock, Flame, Target, Zap
 } from 'lucide-react';
 
 const roadmapSteps = [

@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import DashboardLayout from '../components/DashboardLayout';
 import {
-  Target, Clock, Flame, Save, Check, Briefcase,
-  GraduationCap, Sparkles, Settings2, Bell
+  Save, Check, Briefcase,
+  GraduationCap, Clock, Bell
 } from 'lucide-react';
 
 const roleOptions = ['Backend Developer', 'Frontend Developer', 'Full-Stack Developer', 'ML Engineer', 'Data Scientist', 'DevOps Engineer', 'Mobile Developer', 'Cloud Architect'];

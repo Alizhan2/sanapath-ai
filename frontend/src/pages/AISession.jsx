@@ -4,8 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { useRealStats } from '../hooks/useRealStats';
 import DashboardLayout from '../components/DashboardLayout';
 import {
-  Send, Bot, User, Sparkles, Loader2, ThumbsUp, ThumbsDown,
-  Copy, Check, Lightbulb, Code, BookOpen, Rocket, Map, Target,
+  Send, Bot, User, Sparkles, Loader2, ThumbsUp,
+  Copy, Check, Lightbulb, Code, BookOpen, Map, Target,
   Star, Flame, Wifi, WifiOff
 } from 'lucide-react';
 
@@ -42,7 +42,7 @@ const AISession = () => {
         timestamp: new Date()
       }]);
     }, 400);
-  }, []);
+  }, [user]);
 
   const callAI = async (msg) => {
     try {
