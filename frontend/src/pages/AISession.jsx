@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useRealStats } from '../hooks/useRealStats';
 import DashboardLayout from '../components/DashboardLayout';
 import {
-  Send, Bot, User, Sparkles, Loader2, ThumbsUp,
+  Send, Bot, User, Sparkles, Loader2, ThumbsUp, ThumbsDown,
   Copy, Check, Lightbulb, Code, BookOpen, Map, Target,
   Star, Flame, Wifi, WifiOff
 } from 'lucide-react';
@@ -21,24 +21,40 @@ const quickActions = [
 const AISession = () => {
   const { user } = useAuth();
   const { stats, skills } = useRealStats();
-  const [messages, setMessages] = useState([]);
+  const goals = JSON.parse(localStorage.getItem('sanapath_goals') || '{}');
+  const careerPath = goals.selectedRoles?.join(' / ') || user?.career_goal || 'your career';
+
+  // Load chat history from localStorage
+  const [messages, setMessages] = useState(() => {
+    const saved = localStorage.getItem('sanapath_chat_history');
+    if (saved) try { return JSON.parse(saved); } catch { /* ignore */ }
+    return [];
+  });
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [copiedId, setCopiedId] = useState(null);
   const messagesEndRef = useRef(null);
 
+  // Persist chat history
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem('sanapath_chat_history', JSON.stringify(messages.slice(-50)));
+    }
+  }, [messages]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   useEffect(() => {
+    if (messages.length > 0) return; // Don't re-greet if history exists
     // Greeting
     setTimeout(() => {
       setMessages([{
         id: Date.now(),
         role: 'assistant',
-        content: `Hey ${user?.name?.split(' ')[0] || 'there'}! 👋 I'm your SanaPath AI coach.\n\nI can see you're on the **Junior Backend Developer** path. How can I help you today? Use the quick actions below or ask me anything!`,
+        content: `Hey ${user?.name?.split(' ')[0] || 'there'}! 👋 I'm your SanaPath AI coach.\n\nI can see you're pursuing **${careerPath}**. How can I help you today? Use the quick actions below or ask me anything!`,
         timestamp: new Date()
       }]);
     }, 400);
@@ -83,7 +99,7 @@ const AISession = () => {
               </div>
               <div>
                 <p className="text-white font-semibold">{user?.name || 'Student'}</p>
-                <p className="text-xs text-deep-blue-400">Junior Backend Developer</p>
+                <p className="text-xs text-deep-blue-400">{careerPath}</p>
               </div>
             </div>
             <div className="space-y-2 text-sm">
@@ -111,12 +127,24 @@ const AISession = () => {
           <div className="card-glass p-5">
             <h4 className="text-xs font-medium text-deep-blue-400 uppercase tracking-wider mb-3">Mini Roadmap</h4>
             <div className="space-y-2">
-              {['Python Basics', 'APIs & Databases', 'Testing', 'Deploy & Portfolio'].map((s, i) => (
-                <div key={i} className={`flex items-center gap-2 text-sm ${i === 1 ? 'text-neon-purple-400' : i < 1 ? 'text-deep-blue-500 line-through' : 'text-deep-blue-500'}`}>
-                  <div className={`w-2 h-2 rounded-full ${i === 1 ? 'bg-neon-purple-400' : i < 1 ? 'bg-green-500' : 'bg-deep-blue-700'}`} />
-                  {s}
-                </div>
-              ))}
+              {(() => {
+                const roadmap = JSON.parse(localStorage.getItem('sanapath_roadmap') || '[]');
+                const items = roadmap.length > 0
+                  ? roadmap.slice(0, 5).map(s => ({ title: s.title?.split(':').pop()?.trim() || s.title, status: s._status || 'upcoming' }))
+                  : [{ title: 'Take the survey first', status: 'upcoming' }];
+                return items.map((s, i) => (
+                  <div key={i} className={`flex items-center gap-2 text-sm ${
+                    s.status === 'in-progress' ? 'text-neon-purple-400' :
+                    s.status === 'completed' ? 'text-deep-blue-500 line-through' : 'text-deep-blue-500'
+                  }`}>
+                    <div className={`w-2 h-2 rounded-full ${
+                      s.status === 'in-progress' ? 'bg-neon-purple-400' :
+                      s.status === 'completed' ? 'bg-green-500' : 'bg-deep-blue-700'
+                    }`} />
+                    {s.title}
+                  </div>
+                ));
+              })()}
             </div>
           </div>
         </div>
@@ -158,7 +186,12 @@ const AISession = () => {
                       ? 'bg-cyber-blue/20 text-white rounded-br-sm'
                       : 'bg-deep-blue-800/60 text-deep-blue-100 rounded-bl-sm'
                   }`}>
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed">{msg.content}</p>
+                    <div className="whitespace-pre-wrap text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: msg.role === 'assistant' ? msg.content
+                      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
+                      .replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-deep-blue-700 text-cyber-blue text-xs font-mono">$1</code>')
+                      .replace(/^- (.+)$/gm, '<span class="flex items-start gap-1.5"><span class="text-neon-purple-400 mt-1">•</span><span>$1</span></span>')
+                      .replace(/^(\d+)\. (.+)$/gm, '<span class="flex items-start gap-1.5"><span class="text-neon-purple-400 font-medium">$1.</span><span>$2</span></span>')
+                      : msg.content }} />
                   </div>
                   {msg.role === 'assistant' && (
                     <div className="flex items-center gap-2 mt-1.5 ml-1">

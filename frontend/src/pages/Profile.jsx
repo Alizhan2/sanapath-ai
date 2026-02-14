@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
+import { useRealStats } from '../hooks/useRealStats';
+import DashboardLayout from '../components/DashboardLayout';
 import {
     User,
     Mail,
@@ -15,16 +17,28 @@ import {
     X,
     LogOut,
     Shield,
-    Trash2
+    Trash2,
+    AlertTriangle,
+    Flame,
+    Star
 } from 'lucide-react';
-import Navbar from '../components/Navbar';
 
 const Profile = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const toast = useToast();
+    const { stats } = useRealStats();
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+    // Compute real stats
+    const daysActive = (() => {
+        const log = JSON.parse(localStorage.getItem('activityLog') || '[]');
+        const checkins = JSON.parse(localStorage.getItem('sanapath_checkins') || '[]');
+        const uniqueDays = new Set([...log.map(e => e.date), ...checkins.map(c => c.date?.split('T')[0])]);
+        return Math.max(1, uniqueDays.size);
+    })();
 
     const [formData, setFormData] = useState({
         name: user?.name || '',
@@ -34,12 +48,14 @@ const Profile = () => {
     });
 
     useEffect(() => {
+        // Also load saved profile overrides from localStorage
+        const savedProfile = JSON.parse(localStorage.getItem('sanapath_profile') || '{}');
         if (user) {
             setFormData({
-                name: user.name || '',
-                university: user.university || '',
-                career_goal: user.career_goal || '',
-                skill_level: user.skill_level || '',
+                name: savedProfile.name || user.name || '',
+                university: savedProfile.university || user.university || '',
+                career_goal: savedProfile.career_goal || user.career_goal || '',
+                skill_level: savedProfile.skill_level || user.skill_level || '',
             });
         }
     }, [user]);
@@ -47,7 +63,7 @@ const Profile = () => {
     const handleSave = async () => {
         setLoading(true);
         try {
-            // TODO: Implement profile update API
+            localStorage.setItem('sanapath_profile', JSON.stringify(formData));
             toast.success('Profile updated successfully!');
             setIsEditing(false);
         } catch (error) {
@@ -55,6 +71,15 @@ const Profile = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleDeleteAccount = () => {
+        // Clear all user data from localStorage
+        const keys = Object.keys(localStorage).filter(k => k.startsWith('sanapath') || k === 'userProjects' || k === 'activityLog');
+        keys.forEach(k => localStorage.removeItem(k));
+        toast.info('Account data cleared');
+        logout();
+        navigate('/');
     };
 
     const handleLogout = async () => {
@@ -78,10 +103,8 @@ const Profile = () => {
     }
 
     return (
-        <div className="min-h-screen bg-hero-pattern">
-            <Navbar />
-
-            <main className="max-w-4xl mx-auto px-4 pt-24 pb-12">
+        <DashboardLayout>
+            <div className="max-w-4xl mx-auto">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -208,10 +231,10 @@ const Profile = () => {
                     {/* Stats */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {[
-                            { label: 'Projects Started', value: '0', icon: Code2 },
-                            { label: 'Projects Completed', value: '0', icon: Target },
-                            { label: 'Days Active', value: '1', icon: Calendar },
-                            { label: 'Skill Level', value: user.skill_level || 'Beginner', icon: Shield },
+                            { label: 'Projects Started', value: stats.totalProjects, icon: Code2 },
+                            { label: 'Tasks Completed', value: stats.completedTasks, icon: Target },
+                            { label: 'Days Active', value: daysActive, icon: Calendar },
+                            { label: 'Level', value: `Lvl ${stats.level}`, icon: Star },
                         ].map((stat, i) => (
                             <motion.div
                                 key={i}
@@ -242,6 +265,7 @@ const Profile = () => {
                             </motion.button>
 
                             <motion.button
+                                onClick={() => setShowDeleteConfirm(true)}
                                 className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors"
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
@@ -251,9 +275,38 @@ const Profile = () => {
                             </motion.button>
                         </div>
                     </div>
+
+                    {/* Delete Confirmation Modal */}
+                    <AnimatePresence>
+                    {showDeleteConfirm && (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                        onClick={() => setShowDeleteConfirm(false)}
+                      >
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+                          className="card-glass p-6 max-w-sm w-full" onClick={e => e.stopPropagation()}
+                        >
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                              <AlertTriangle className="w-5 h-5 text-red-400" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-white">Delete Account?</h3>
+                          </div>
+                          <p className="text-sm text-deep-blue-300 mb-6">
+                            This will permanently delete all your projects, progress, achievements, and settings. This action cannot be undone.
+                          </p>
+                          <div className="flex gap-3">
+                            <button onClick={() => setShowDeleteConfirm(false)} className="btn-secondary flex-1 !py-2.5">Cancel</button>
+                            <button onClick={handleDeleteAccount} className="flex-1 py-2.5 rounded-xl bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 font-medium text-sm transition-colors">Yes, Delete</button>
+                          </div>
+                        </motion.div>
+                      </motion.div>
+                    )}
+                    </AnimatePresence>
+
                 </motion.div>
-            </main>
-        </div>
+            </div>
+        </DashboardLayout>
     );
 };
 

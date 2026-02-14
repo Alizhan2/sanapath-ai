@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import DashboardLayout from '../components/DashboardLayout';
+import { useToast } from '../components/Toast';
 import {
   Save, Check, Briefcase,
   GraduationCap, Clock, Bell
 } from 'lucide-react';
+
+const STORAGE_KEY = 'sanapath_goals';
 
 const roleOptions = ['Backend Developer', 'Frontend Developer', 'Full-Stack Developer', 'ML Engineer', 'Data Scientist', 'DevOps Engineer', 'Mobile Developer', 'Cloud Architect'];
 const timeOptions = [
@@ -14,11 +17,28 @@ const timeOptions = [
 ];
 
 const Goals = () => {
-  const [selectedRoles, setSelectedRoles] = useState(['Backend Developer', 'ML Engineer']);
-  const [timeHorizon, setTimeHorizon] = useState(12);
-  const [hoursPerWeek, setHoursPerWeek] = useState(12);
-  const [notifications, setNotifications] = useState(true);
-  const [weeklyReminder, setWeeklyReminder] = useState(true);
+  const toast = useToast();
+  // Load saved goals from localStorage
+  const [selectedRoles, setSelectedRoles] = useState(() => {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    return saved.selectedRoles || [];
+  });
+  const [timeHorizon, setTimeHorizon] = useState(() => {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    return saved.timeHorizon || 12;
+  });
+  const [hoursPerWeek, setHoursPerWeek] = useState(() => {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    return saved.hoursPerWeek || 12;
+  });
+  const [notifications, setNotifications] = useState(() => {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    return saved.notifications !== undefined ? saved.notifications : true;
+  });
+  const [weeklyReminder, setWeeklyReminder] = useState(() => {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    return saved.weeklyReminder !== undefined ? saved.weeklyReminder : true;
+  });
   const [saved, setSaved] = useState(false);
 
   const toggleRole = (role) => {
@@ -28,7 +48,18 @@ const Goals = () => {
   };
 
   const handleSave = () => {
+    const goalsData = {
+      selectedRoles,
+      timeHorizon,
+      hoursPerWeek,
+      notifications,
+      weeklyReminder,
+      updatedAt: new Date().toISOString(),
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(goalsData));
+    window.dispatchEvent(new Event('statsUpdated'));
     setSaved(true);
+    toast.success('Goals saved successfully!');
     setTimeout(() => setSaved(false), 3000);
   };
 

@@ -29,7 +29,7 @@ const RoadmapDetail = () => {
         <div className="flex-1">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
             <h1 className="text-2xl font-bold text-white mb-1">Your Roadmap</h1>
-            <p className="text-deep-blue-400 text-sm">Backend Developer → ML Engineer · Personalized for your goals</p>
+            <p className="text-deep-blue-400 text-sm">{(() => { const g = JSON.parse(localStorage.getItem('sanapath_goals') || '{}'); return g.selectedRoles?.join(' → ') || 'Your Career Path'; })()} · Personalized for your goals</p>
           </motion.div>
 
           {/* Timeline */}
@@ -233,7 +233,11 @@ const RoadmapDetail = () => {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-deep-blue-400">Est. Duration</span>
-                <span className="text-white font-medium">18-23 weeks</span>
+                <span className="text-white font-medium">{steps.reduce((sum, s) => {
+                  const d = s.duration || '';
+                  const nums = d.match(/(\d+)/g);
+                  return sum + (nums ? parseInt(nums[nums.length - 1]) : 3);
+                }, 0)} weeks est.</span>
               </div>
             </div>
           </motion.div>

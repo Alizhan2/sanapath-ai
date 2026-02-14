@@ -101,7 +101,7 @@ const Dashboard = () => {
                 Hi, {user?.name?.split(' ')[0] || 'Student'} 👋
               </h1>
               {hasData ? (
-                <p className="text-deep-blue-400 text-sm">Your current path: <span className="text-neon-purple-400">Junior Backend Developer</span></p>
+                <p className="text-deep-blue-400 text-sm">Your current path: <span className="text-neon-purple-400">{(() => { const g = JSON.parse(localStorage.getItem('sanapath_goals') || '{}'); return g.selectedRoles?.join(' → ') || user?.career_goal || 'Career Explorer'; })()}</span></p>
               ) : (
                 <p className="text-deep-blue-400 text-sm">Connect your GitHub and LinkedIn to start your path</p>
               )}

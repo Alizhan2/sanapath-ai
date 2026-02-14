@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import DashboardLayout from '../components/DashboardLayout';
+import { useToast } from '../components/Toast';
 import {
   ChevronRight, ChevronLeft, Clock, Brain, Target,
-  Star, Send, Sparkles, CheckCircle2, PartyPopper
+  Star, Send, Sparkles, CheckCircle2, PartyPopper,
+  History, CalendarDays, TrendingUp
 } from 'lucide-react';
 
 const steps = [
@@ -44,10 +46,17 @@ const motivationalMessages = [
   "🌟 Progress isn't always visible, but it's always happening!",
 ];
 
+const CHECKIN_KEY = 'sanapath_checkins';
+
 const WeeklyCheckin = () => {
+  const toast = useToast();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+
+  // Load past check-ins
+  const pastCheckins = JSON.parse(localStorage.getItem(CHECKIN_KEY) || '[]');
 
   const step = steps[currentStep];
   const progress = ((currentStep + 1) / steps.length) * 100;
@@ -55,6 +64,26 @@ const WeeklyCheckin = () => {
   const setAnswer = (val) => setAnswers(prev => ({ ...prev, [step.id]: val }));
 
   const handleSubmit = () => {
+    // Save check-in to localStorage
+    const checkin = {
+      id: Date.now(),
+      date: new Date().toISOString(),
+      hours: answers[1] || 0,
+      hardestTopic: answers[2] || '—',
+      confidence: answers[3] || 0,
+      achievements: answers[4] || [],
+      notes: answers[5] || '',
+    };
+    const updated = [checkin, ...pastCheckins].slice(0, 52); // Keep last year
+    localStorage.setItem(CHECKIN_KEY, JSON.stringify(updated));
+
+    // Record activity for XP system
+    const activityLog = JSON.parse(localStorage.getItem('activityLog') || '[]');
+    activityLog.push({ date: new Date().toISOString().split('T')[0], type: 'checkin', count: 1 });
+    localStorage.setItem('activityLog', JSON.stringify(activityLog));
+    window.dispatchEvent(new Event('statsUpdated'));
+
+    toast.success(`Check-in saved! +${checkin.hours}h logged this week`);
     setSubmitted(true);
   };
 
@@ -99,6 +128,13 @@ const WeeklyCheckin = () => {
             >
               Done
             </button>
+            {pastCheckins.length > 1 && (
+              <button onClick={() => { setSubmitted(false); setShowHistory(true); setCurrentStep(0); setAnswers({}); }}
+                className="mt-2 text-sm text-neon-purple-400 hover:text-neon-purple-300 flex items-center gap-1 justify-center w-full"
+              >
+                <History className="w-4 h-4" /> View Past Check-ins ({pastCheckins.length})
+              </button>
+            )}
           </motion.div>
         </div>
       </DashboardLayout>
@@ -108,11 +144,64 @@ const WeeklyCheckin = () => {
   return (
     <DashboardLayout>
       <div className="max-w-2xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <h1 className="text-2xl font-bold text-white mb-1">Weekly Check-in</h1>
-          <p className="text-deep-blue-400 text-sm">Reflect on your week and track your growth</p>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white mb-1">Weekly Check-in</h1>
+            <p className="text-deep-blue-400 text-sm">Reflect on your week and track your growth</p>
+          </div>
+          {pastCheckins.length > 0 && (
+            <button onClick={() => setShowHistory(!showHistory)}
+              className="btn-secondary flex items-center gap-2 text-sm"
+            >
+              <History className="w-4 h-4" />
+              {showHistory ? 'New Check-in' : `History (${pastCheckins.length})`}
+            </button>
+          )}
         </motion.div>
 
+        {showHistory ? (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+            {pastCheckins.map((c, i) => {
+              const date = new Date(c.date);
+              const weekAgo = Math.floor((Date.now() - date.getTime()) / (7 * 24 * 3600 * 1000));
+              const label = weekAgo === 0 ? 'This week' : weekAgo === 1 ? '1 week ago' : `${weekAgo} weeks ago`;
+              return (
+                <motion.div key={c.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                  className="card-glass p-5"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <CalendarDays className="w-4 h-4 text-neon-purple-400" />
+                      <span className="text-sm font-medium text-white">{date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                      <span className="text-xs text-deep-blue-500">{label}</span>
+                    </div>
+                    <span className="text-xs text-deep-blue-500">{'⭐'.repeat(c.confidence)}</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="bg-deep-blue-900/40 rounded-lg p-2.5 text-center">
+                      <p className="text-lg font-bold text-white">{c.hours}h</p>
+                      <p className="text-[10px] text-deep-blue-500 uppercase">Hours</p>
+                    </div>
+                    <div className="bg-deep-blue-900/40 rounded-lg p-2.5 text-center">
+                      <p className="text-sm font-medium text-white truncate">{c.hardestTopic}</p>
+                      <p className="text-[10px] text-deep-blue-500 uppercase">Hardest</p>
+                    </div>
+                    <div className="bg-deep-blue-900/40 rounded-lg p-2.5 text-center">
+                      <p className="text-lg font-bold text-white">{c.achievements?.length || 0}</p>
+                      <p className="text-[10px] text-deep-blue-500 uppercase">Wins</p>
+                    </div>
+                    <div className="bg-deep-blue-900/40 rounded-lg p-2.5 text-center">
+                      <p className="text-lg font-bold gradient-text">{c.confidence}/5</p>
+                      <p className="text-[10px] text-deep-blue-500 uppercase">Confidence</p>
+                    </div>
+                  </div>
+                  {c.notes && <p className="text-xs text-deep-blue-400 mt-3 italic">"{c.notes}"</p>}
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        ) : (
+        <>
         {/* Progress bar */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
@@ -238,6 +327,8 @@ const WeeklyCheckin = () => {
             </button>
           )}
         </div>
+        </>
+        )}
       </div>
     </DashboardLayout>
   );

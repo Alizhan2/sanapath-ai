@@ -1,55 +1,78 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 import {
   Github, ExternalLink, Star, GitFork, Code2,
-  Award, Sparkles, ArrowUpRight, Calendar
+  Award, Sparkles, ArrowUpRight, Calendar, Rocket, Plus
 } from 'lucide-react';
 
-const demoProjects = [
-  {
-    id: 1, name: 'fastapi-todo-api', description: 'Full-stack TODO API with JWT authentication, PostgreSQL database, and comprehensive test suite. Includes Swagger docs and Docker support.',
-    tech: ['Python', 'FastAPI', 'PostgreSQL', 'Docker'], stars: 12, forks: 3, language: 'Python',
-    status: 'Active', lastUpdated: '2 days ago', recommended: true, url: '#',
-    highlights: ['100% test coverage', 'Docker-compose setup', 'CI/CD pipeline'],
-  },
-  {
-    id: 2, name: 'ml-sentiment-analyzer', description: 'Real-time sentiment analysis API using scikit-learn. Trained on 50k movie reviews with 87% accuracy.',
-    tech: ['Python', 'scikit-learn', 'FastAPI', 'Pandas'], stars: 8, forks: 1, language: 'Python',
-    status: 'Active', lastUpdated: '1 week ago', recommended: true, url: '#',
-    highlights: ['87% accuracy', 'REST API endpoint', 'Pre-trained model included'],
-  },
-  {
-    id: 3, name: 'sanapath-ai', description: 'AI-powered career coaching platform with GitHub/LinkedIn profile analysis and personalized learning roadmaps.',
-    tech: ['React', 'Tailwind CSS', 'FastAPI', 'Gemini AI'], stars: 5, forks: 0, language: 'JavaScript',
-    status: 'Active', lastUpdated: '3 days ago', recommended: false, url: '#',
-    highlights: ['Real AI integration', 'Firebase auth', 'Full-stack project'],
-  },
-  {
-    id: 4, name: 'python-design-patterns', description: 'Collection of common design patterns implemented in Python with clear documentation and examples.',
-    tech: ['Python', 'OOP'], stars: 3, forks: 2, language: 'Python',
-    status: 'Archived', lastUpdated: '1 month ago', recommended: false, url: '#',
-    highlights: ['15 patterns', 'Well-documented', 'Unit tests included'],
-  },
-  {
-    id: 5, name: 'cli-task-manager', description: 'Command-line task management tool built with Click. Supports categories, priorities, and file persistence.',
-    tech: ['Python', 'Click', 'JSON'], stars: 2, forks: 0, language: 'Python',
-    status: 'Complete', lastUpdated: '2 months ago', recommended: false, url: '#',
-    highlights: ['Clean CLI interface', 'Data persistence', 'Good first project'],
-  },
-];
-
-const langColors = { 'Python': 'bg-blue-400', 'JavaScript': 'bg-yellow-400', 'TypeScript': 'bg-blue-500' };
+const langColors = { 'Python': 'bg-blue-400', 'JavaScript': 'bg-yellow-400', 'TypeScript': 'bg-blue-500', 'React': 'bg-cyan-400', 'FastAPI': 'bg-emerald-400' };
 
 const Portfolio = () => {
   const [filter, setFilter] = useState('All');
-  const filters = ['All', 'Recommended', 'Active', 'Complete'];
-  const filtered = demoProjects.filter(p => {
-    if (filter === 'Recommended') return p.recommended;
-    if (filter === 'Active') return p.status === 'Active';
-    if (filter === 'Complete') return p.status === 'Complete' || p.status === 'Archived';
+
+  // Load REAL user projects from localStorage
+  const userProjects = useMemo(() => {
+    const saved = JSON.parse(localStorage.getItem('userProjects') || '[]');
+    return saved.map(p => {
+      const roadmap = p.roadmap || [];
+      const totalTasks = roadmap.reduce((sum, week) => sum + (week.tasks?.length || 0), 0);
+      const doneTasks = Object.values(p.completedTasks || {}).filter(Boolean).length;
+      const progress = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
+      const tech = p.tech_stack || p.tech || [];
+      const mainLang = tech[0] || 'Python';
+      const started = p.startedAt ? new Date(p.startedAt) : new Date();
+      const daysSince = Math.floor((Date.now() - started.getTime()) / (1000 * 60 * 60 * 24));
+      const lastUpdated = daysSince === 0 ? 'Today' : daysSince === 1 ? 'Yesterday' : `${daysSince} days ago`;
+
+      return {
+        id: p.id,
+        name: p.title || 'Untitled Project',
+        description: p.description || '',
+        tech,
+        language: mainLang,
+        status: p.status === 'completed' ? 'Complete' : progress > 0 ? 'Active' : 'New',
+        lastUpdated,
+        progress,
+        doneTasks,
+        totalTasks,
+        recommended: progress >= 80 || p.status === 'completed',
+        highlights: [
+          `${doneTasks}/${totalTasks} tasks done`,
+          `${progress}% complete`,
+          ...(p.learning_outcomes?.slice(0, 1) || []),
+        ],
+      };
+    });
+  }, []);
+
+  const filters = ['All', 'Active', 'Complete', 'CV-Ready'];
+  const filtered = userProjects.filter(p => {
+    if (filter === 'Active') return p.status === 'Active' || p.status === 'New';
+    if (filter === 'Complete') return p.status === 'Complete';
+    if (filter === 'CV-Ready') return p.recommended;
     return true;
   });
+
+  if (userProjects.length === 0) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[calc(100vh-12rem)]">
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center max-w-md">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-neon-purple-500/20 to-cyber-blue/20 flex items-center justify-center mx-auto mb-6">
+              <Rocket className="w-10 h-10 text-neon-purple-400" />
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-3">No Projects Yet</h2>
+            <p className="text-deep-blue-400 mb-6">Take the survey to get personalized project recommendations and build your portfolio!</p>
+            <Link to="/survey" className="btn-primary inline-flex items-center gap-2">
+              <Plus className="w-4 h-4" /> Start Your First Project
+            </Link>
+          </motion.div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -63,23 +86,23 @@ const Portfolio = () => {
         className="card-glass p-4 mb-6 flex items-center gap-8"
       >
         <div className="flex items-center gap-3">
-          <Github className="w-5 h-5 text-white" />
+          <Code2 className="w-5 h-5 text-neon-purple-400" />
           <div>
-            <p className="text-xs text-deep-blue-400">Repos</p>
-            <p className="text-lg font-bold text-white">{demoProjects.length}</p>
+            <p className="text-xs text-deep-blue-400">Projects</p>
+            <p className="text-lg font-bold text-white">{userProjects.length}</p>
           </div>
         </div>
         <div>
-          <p className="text-xs text-deep-blue-400">Total Stars</p>
-          <p className="text-lg font-bold text-white flex items-center gap-1"><Star className="w-4 h-4 text-yellow-400" /> {demoProjects.reduce((s, p) => s + p.stars, 0)}</p>
+          <p className="text-xs text-deep-blue-400">Total Tasks Done</p>
+          <p className="text-lg font-bold text-white flex items-center gap-1"><Sparkles className="w-4 h-4 text-neon-purple-400" /> {userProjects.reduce((s, p) => s + p.doneTasks, 0)}</p>
         </div>
         <div>
-          <p className="text-xs text-deep-blue-400">Total Forks</p>
-          <p className="text-lg font-bold text-white flex items-center gap-1"><GitFork className="w-4 h-4 text-deep-blue-400" /> {demoProjects.reduce((s, p) => s + p.forks, 0)}</p>
+          <p className="text-xs text-deep-blue-400">Avg Progress</p>
+          <p className="text-lg font-bold text-white">{Math.round(userProjects.reduce((s, p) => s + p.progress, 0) / userProjects.length)}%</p>
         </div>
         <div className="ml-auto">
           <p className="text-xs text-deep-blue-400">CV-Ready Projects</p>
-          <p className="text-lg font-bold text-neon-purple-400">{demoProjects.filter(p => p.recommended).length}</p>
+          <p className="text-lg font-bold text-neon-purple-400">{userProjects.filter(p => p.recommended).length}</p>
         </div>
       </motion.div>
 
@@ -118,7 +141,7 @@ const Portfolio = () => {
                     <Award className="w-3 h-3" /> CV-Ready
                   </span>
                 )}
-                <a href={project.url} target="_blank" rel="noopener noreferrer"
+                <a href={`/project/${project.id}`}
                   className="p-1.5 rounded-lg hover:bg-deep-blue-700 text-deep-blue-400 hover:text-white transition-colors"
                 >
                   <ExternalLink className="w-4 h-4" />
@@ -154,8 +177,12 @@ const Portfolio = () => {
                   <span className={`w-2.5 h-2.5 rounded-full ${langColors[project.language] || 'bg-gray-400'}`} />
                   {project.language}
                 </span>
-                <span className="flex items-center gap-1"><Star className="w-3 h-3" /> {project.stars}</span>
-                <span className="flex items-center gap-1"><GitFork className="w-3 h-3" /> {project.forks}</span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                  project.status === 'Complete' ? 'bg-green-500/20 text-green-400' :
+                  project.status === 'Active' ? 'bg-neon-purple-500/20 text-neon-purple-400' :
+                  'bg-deep-blue-700 text-deep-blue-400'
+                }`}>{project.status}</span>
+                <span>{project.progress}%</span>
               </div>
               <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {project.lastUpdated}</span>
             </div>

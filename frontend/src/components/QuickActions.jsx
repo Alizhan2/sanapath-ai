@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Plus,
   Users,
@@ -9,7 +9,8 @@ import {
   HelpCircle,
   MessageSquare,
   FileText,
-  Zap
+  Zap,
+  Download
 } from 'lucide-react';
 
 const QuickAction = ({ icon: Icon, title, description, href, color, onClick }) => {
@@ -43,6 +44,24 @@ const QuickAction = ({ icon: Icon, title, description, href, color, onClick }) =
 };
 
 const QuickActions = () => {
+  const handleExport = () => {
+    const projects = JSON.parse(localStorage.getItem('userProjects') || '[]');
+    const stats = JSON.parse(localStorage.getItem('sanapath_goals') || '{}');
+    const checkins = JSON.parse(localStorage.getItem('sanapath_checkins') || '[]');
+    const exportData = {
+      exportedAt: new Date().toISOString(),
+      projects: projects.map(p => ({ title: p.title, status: p.status, tech: p.tech_stack || p.tech })),
+      goals: stats,
+      checkinCount: checkins.length,
+      totalHoursStudied: checkins.reduce((s, c) => s + (c.hours || 0), 0),
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'sanapath-progress.json'; a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const actions = [
     {
       icon: Plus,
@@ -60,9 +79,9 @@ const QuickActions = () => {
     },
     {
       icon: BookOpen,
-      title: 'Resources',
-      description: 'Learning materials & docs',
-      href: '#',
+      title: 'Skills Map',
+      description: 'View your skill progress',
+      href: '/skills',
       color: 'from-blue-500 to-cyan-500'
     },
     {
@@ -76,14 +95,14 @@ const QuickActions = () => {
       icon: MessageSquare,
       title: 'AI Assistant',
       description: 'Get help with your project',
-      href: '#',
+      href: '/ai-session',
       color: 'from-green-500 to-emerald-500'
     },
     {
-      icon: FileText,
+      icon: Download,
       title: 'Export Progress',
-      description: 'Download your portfolio',
-      href: '#',
+      description: 'Download your data as JSON',
+      onClick: handleExport,
       color: 'from-indigo-500 to-purple-500'
     }
   ];
