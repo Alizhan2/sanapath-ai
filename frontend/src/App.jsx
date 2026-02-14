@@ -22,6 +22,13 @@ import Leaderboard from './pages/Leaderboard';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import NotFound from './pages/NotFound';
+import AISession from './pages/AISession';
+import Tasks from './pages/Tasks';
+import RoadmapDetail from './pages/RoadmapDetail';
+import SkillsMap from './pages/SkillsMap';
+import Portfolio from './pages/Portfolio';
+import Goals from './pages/Goals';
+import WeeklyCheckin from './pages/WeeklyCheckin';
 
 
 function App() {
@@ -113,6 +120,27 @@ function App() {
 
               {/* Leaderboard */}
               <Route path="/leaderboard" element={<Leaderboard />} />
+
+              {/* AI Session */}
+              <Route path="/ai-session" element={<ProtectedRoute><AISession /></ProtectedRoute>} />
+
+              {/* Tasks */}
+              <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
+
+              {/* Roadmap */}
+              <Route path="/roadmap" element={<ProtectedRoute><RoadmapDetail /></ProtectedRoute>} />
+
+              {/* Skills Map */}
+              <Route path="/skills" element={<ProtectedRoute><SkillsMap /></ProtectedRoute>} />
+
+              {/* Portfolio */}
+              <Route path="/portfolio" element={<ProtectedRoute><Portfolio /></ProtectedRoute>} />
+
+              {/* Goals & Settings */}
+              <Route path="/goals" element={<ProtectedRoute><Goals /></ProtectedRoute>} />
+
+              {/* Weekly Check-in */}
+              <Route path="/weekly-checkin" element={<ProtectedRoute><WeeklyCheckin /></ProtectedRoute>} />
 
               {/* About */}
               <Route path="/about" element={<About />} />

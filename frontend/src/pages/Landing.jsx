@@ -1,63 +1,31 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { 
-  Sparkles, 
-  Rocket, 
-  Users, 
-  BrainCircuit, 
+import {
   ArrowRight,
-  GraduationCap,
+  Github,
+  Linkedin,
+  Sparkles,
   Target,
   Zap,
-  Globe,
-  Code2,
-  Lightbulb
+  Rocket,
+  Map,
+  TrendingUp,
+  CheckCircle2,
+  Star,
+  Users,
+  BrainCircuit,
+  Calendar,
+  Briefcase,
+  ChevronRight
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 const Landing = () => {
-  const features = [
-    {
-      icon: BrainCircuit,
-      title: 'AI-Powered Matching',
-      description: 'Advanced algorithms analyze your skills and interests to find perfect project matches.'
-    },
-    {
-      icon: Target,
-      title: 'Personalized Roadmaps',
-      description: '4-week implementation plans tailored to your learning style and availability.'
-    },
-    {
-      icon: Users,
-      title: 'Community Collaboration',
-      description: 'Connect with 60,000+ students and build together in the AI-Sana ecosystem.'
-    },
-    {
-      icon: Rocket,
-      title: 'Career Acceleration',
-      description: 'Build portfolio-worthy projects that align with your dream career path.'
-    }
-  ];
-
-  const stats = [
-    { value: '60,000+', label: 'Active Students' },
-    { value: '5,000+', label: 'Projects Launched' },
-    { value: '150+', label: 'Partner Companies' },
-    { value: '95%', label: 'Success Rate' }
-  ];
-
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
-    }
+    visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.2 } }
   };
-
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 }
@@ -65,7 +33,7 @@ const Landing = () => {
 
   return (
     <div className="relative overflow-hidden">
-      {/* Animated background elements */}
+      {/* Background Orbs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="floating-orb w-96 h-96 bg-neon-purple-600 -top-48 -left-48" />
         <div className="floating-orb w-[600px] h-[600px] bg-cyber-blue -bottom-96 -right-48" style={{ animationDelay: '2s' }} />
@@ -74,137 +42,225 @@ const Landing = () => {
 
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 pt-20">
-        <div className="max-w-7xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          >
-            {/* Badge */}
-            <motion.div 
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-deep-blue-800/50 border border-neon-purple-500/30 mb-8"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+      {/* ═══════════════════ HERO ═══════════════════ */}
+      <section className="relative min-h-screen flex items-center px-4 pt-20">
+        <div className="max-w-7xl mx-auto w-full">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left — Copy */}
+            <motion.div
+              initial={{ opacity: 0, x: -40 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
             >
-              <Sparkles className="w-4 h-4 text-neon-purple-400" />
-              <span className="text-sm font-medium text-neon-purple-300">AI-Sana Ecosystem</span>
-              <span className="px-2 py-0.5 bg-neon-purple-500/20 rounded-full text-xs text-cyber-blue">60K+ Students</span>
+              <motion.div
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-deep-blue-800/50 border border-neon-purple-500/30 mb-6"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <Sparkles className="w-4 h-4 text-neon-purple-400" />
+                <span className="text-sm text-neon-purple-300">AI-Sana Ecosystem</span>
+                <span className="px-2 py-0.5 bg-neon-purple-500/20 rounded-full text-xs text-cyber-blue">60K+ Students</span>
+              </motion.div>
+
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6">
+                <span className="text-white">Your AI mentor</span>
+                <br />
+                <span className="text-white">for </span>
+                <span className="gradient-text animate-gradient-x bg-[length:200%_auto]">IT & AI careers</span>
+              </h1>
+
+              <p className="text-xl text-deep-blue-200 max-w-xl mb-8 leading-relaxed">
+                SanaPath analyzes your <span className="text-white font-medium">GitHub</span> and{' '}
+                <span className="text-white font-medium">LinkedIn</span> profiles and builds a personal
+                skill roadmap with tasks, projects, and weekly check‑ins.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link to="/login">
+                  <motion.button
+                    className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 rounded-xl bg-[#24292e] text-white font-semibold hover:bg-[#2f363d] transition-all hover:shadow-lg hover:shadow-[#24292e]/30"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    <Github className="w-5 h-5" />
+                    Sign in with GitHub
+                  </motion.button>
+                </Link>
+                <Link to="/login">
+                  <motion.button
+                    className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 rounded-xl bg-[#0077B5] text-white font-semibold hover:bg-[#006097] transition-all hover:shadow-lg hover:shadow-[#0077B5]/30"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    <Linkedin className="w-5 h-5" />
+                    Sign in with LinkedIn
+                  </motion.button>
+                </Link>
+              </div>
+
+              <p className="text-sm text-deep-blue-500 mt-4">Free forever · No credit card required</p>
             </motion.div>
 
-            {/* Main Heading */}
-            <motion.h1 
-              className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.8 }}
+            {/* Right — Glassmorphism Dashboard Preview */}
+            <motion.div
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="relative hidden lg:block"
             >
-              <span className="text-white">Your AI Career</span>
-              <br />
-              <span className="gradient-text animate-gradient-x bg-[length:200%_auto]">Starts Here</span>
-            </motion.h1>
+              <div className="absolute -inset-4 bg-gradient-to-r from-neon-purple-500/20 via-cyber-blue/20 to-neon-purple-500/20 blur-3xl rounded-3xl" />
 
-            {/* Subtitle */}
-            <motion.p 
-              className="text-xl md:text-2xl text-deep-blue-200 max-w-3xl mx-auto mb-10 leading-relaxed"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-            >
-              Discover personalized AI project ideas matched to your skills, interests, and career goals. 
-              Join 60,000+ students building the future with <span className="text-cyber-blue font-semibold">SanaPath AI</span>.
-            </motion.p>
+              <div className="relative card-glass p-6 rounded-2xl">
+                {/* Mini top bar */}
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-neon-purple-500 to-cyber-blue flex items-center justify-center">
+                      <BrainCircuit className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold text-sm">Hi, Alizhan 👋</p>
+                      <p className="text-deep-blue-400 text-xs">Junior Backend Developer</p>
+                    </div>
+                  </div>
+                  <span className="px-2 py-1 rounded-full bg-orange-500/20 text-orange-400 text-xs flex items-center gap-1">
+                    <Star className="w-3 h-3" /> 1,250 XP
+                  </span>
+                </div>
 
-            {/* CTA Buttons */}
-            <motion.div 
-              className="flex flex-col sm:flex-row items-center justify-center gap-4"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
-            >
-              <Link to="/survey">
-                <motion.button 
-                  className="btn-primary group flex items-center gap-2 text-lg"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <span>Find My Projects</span>
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </motion.button>
-              </Link>
-              <Link to="/community">
-                <motion.button 
-                  className="btn-secondary flex items-center gap-2"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Users className="w-5 h-5" />
-                  <span>Explore Community</span>
-                </motion.button>
-              </Link>
-            </motion.div>
-          </motion.div>
+                {/* Roadmap Progress */}
+                <div className="p-4 rounded-xl bg-deep-blue-800/60 mb-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-deep-blue-300">Roadmap Progress</span>
+                    <span className="text-lg font-bold text-white">45%</span>
+                  </div>
+                  <div className="h-2.5 bg-deep-blue-700 rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-neon-purple-500 to-cyber-blue rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: '45%' }}
+                      transition={{ duration: 1.5, delay: 1 }}
+                    />
+                  </div>
+                </div>
 
-          {/* Hero Visual */}
-          <motion.div 
-            className="mt-16 relative"
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1, duration: 0.8 }}
-          >
-            <div className="relative mx-auto max-w-4xl">
-              <div className="card-glass p-8 md:p-12">
-                <div className="grid grid-cols-3 gap-4">
-                  {[Code2, Lightbulb, Globe].map((Icon, i) => (
-                    <motion.div 
+                {/* Mini Task List */}
+                <div className="space-y-2 mb-4">
+                  <p className="text-xs text-deep-blue-400 font-medium uppercase tracking-wider">This week's focus</p>
+                  {[
+                    { text: 'Build CRUD API with FastAPI', done: true, tag: 'Backend' },
+                    { text: 'Write unit tests', done: false, tag: 'Testing' },
+                    { text: 'Improve README for portfolio', done: false, tag: 'GitHub' },
+                  ].map((task, i) => (
+                    <motion.div
                       key={i}
-                      className="flex flex-col items-center p-4 rounded-xl bg-deep-blue-700/30"
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 1.2 + i * 0.1 }}
+                      className="flex items-center gap-3 p-2.5 rounded-lg bg-deep-blue-800/40"
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 1.3 + i * 0.15 }}
                     >
-                      <Icon className="w-8 h-8 text-neon-purple-400 mb-2" />
-                      <div className="h-2 w-full bg-deep-blue-600 rounded-full overflow-hidden">
-                        <motion.div 
-                          className="h-full bg-gradient-to-r from-neon-purple-500 to-cyber-blue"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${70 + i * 10}%` }}
-                          transition={{ delay: 1.5 + i * 0.2, duration: 1 }}
-                        />
+                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${
+                        task.done ? 'bg-green-500 border-green-500' : 'border-deep-blue-600'
+                      }`}>
+                        {task.done && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
                       </div>
+                      <span className={`text-sm flex-1 ${task.done ? 'text-deep-blue-500 line-through' : 'text-white'}`}>
+                        {task.text}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full bg-deep-blue-700/80 text-deep-blue-300 text-xs">{task.tag}</span>
                     </motion.div>
                   ))}
                 </div>
-                <div className="mt-6 flex items-center justify-between text-sm text-deep-blue-300">
-                  <span>Analyzing your profile...</span>
-                  <span className="text-cyber-blue">5 projects matched</span>
+
+                {/* Bottom Stats Row */}
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { label: 'GitHub Health', value: '72%', color: 'text-green-400' },
+                    { label: 'LinkedIn Score', value: '58%', color: 'text-[#0077B5]' },
+                    { label: 'Streak', value: '12 days', color: 'text-orange-400' },
+                  ].map((s, i) => (
+                    <div key={i} className="p-3 rounded-lg bg-deep-blue-800/40 text-center">
+                      <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>
+                      <p className="text-xs text-deep-blue-400">{s.label}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
-              {/* Glow effect */}
-              <div className="absolute -inset-4 bg-gradient-to-r from-neon-purple-500/20 via-cyber-blue/20 to-neon-purple-500/20 blur-3xl -z-10 rounded-3xl" />
-            </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════ HOW IT WORKS ═══════════════════ */}
+      <section className="py-24 px-4 relative">
+        <div className="max-w-6xl mx-auto">
+          <motion.div className="text-center mb-16" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">How It <span className="gradient-text">Works</span></h2>
+            <p className="text-xl text-deep-blue-300">Three steps to your personal career roadmap</p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { step: '01', icon: Github, title: 'Connect Profiles', desc: 'Link your GitHub and LinkedIn. We analyze your repos, skills, experience, and career interests.' },
+              { step: '02', icon: BrainCircuit, title: 'AI Analysis', desc: 'Our AI evaluates your current level, identifies gaps, and creates a personalized growth plan.' },
+              { step: '03', icon: Map, title: 'Personal Roadmap & Tasks', desc: 'Get a step-by-step roadmap with weekly tasks, mini-projects, and progress tracking.' }
+            ].map((item, i) => (
+              <motion.div key={i} className="relative" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }}>
+                <div className="card-glass p-8 text-center relative overflow-hidden group h-full">
+                  <div className="absolute top-4 left-4 text-6xl font-bold text-deep-blue-700/50 group-hover:text-neon-purple-500/20 transition-colors">{item.step}</div>
+                  <div className="relative z-10">
+                    <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-neon-purple-500 to-cyber-blue flex items-center justify-center">
+                      <item.icon className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-white mb-3">{item.title}</h3>
+                    <p className="text-deep-blue-300">{item.desc}</p>
+                  </div>
+                </div>
+                {i < 2 && <div className="hidden md:block absolute top-1/2 -right-4 text-neon-purple-500 z-10"><ArrowRight className="w-8 h-8" /></div>}
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════ BENEFITS ═══════════════════ */}
+      <section className="py-24 px-4 relative">
+        <div className="max-w-6xl mx-auto">
+          <motion.div className="text-center mb-16" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">Why <span className="gradient-text">SanaPath</span>?</h2>
+            <p className="text-xl text-deep-blue-300">Everything you need to accelerate your career</p>
+          </motion.div>
+
+          <motion.div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6" variants={containerVariants} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+            {[
+              { icon: Map, title: 'Clear Roadmap', desc: 'A step-by-step plan tailored to your skills and goals — no more guessing what to learn next.', color: 'from-neon-purple-500 to-neon-purple-600' },
+              { icon: Briefcase, title: 'Portfolio-Ready Projects', desc: 'Build real projects that impress recruiters. Each one optimized for your target role.', color: 'from-cyber-blue to-blue-500' },
+              { icon: TrendingUp, title: 'Better GitHub & LinkedIn', desc: 'Get actionable tips to improve your profiles and increase visibility to hiring managers.', color: 'from-green-500 to-emerald-500' },
+              { icon: Calendar, title: 'Motivation & Check-ins', desc: 'Weekly surveys, streak tracking, and AI feedback keep you accountable and on track.', color: 'from-orange-500 to-amber-500' }
+            ].map((b, i) => (
+              <motion.div key={i} className="card-glass p-6 group hover:border-neon-purple-500/50 transition-all" variants={itemVariants} whileHover={{ y: -6 }}>
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${b.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                  <b.icon className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">{b.title}</h3>
+                <p className="text-sm text-deep-blue-300 leading-relaxed">{b.desc}</p>
+              </motion.div>
+            ))}
           </motion.div>
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-20 px-4 relative">
+      {/* ═══════════════════ STATS ═══════════════════ */}
+      <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
-          <motion.div 
-            className="grid grid-cols-2 md:grid-cols-4 gap-8"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-          >
-            {stats.map((stat, index) => (
-              <motion.div 
-                key={index}
-                className="text-center"
-                variants={itemVariants}
-              >
+          <motion.div className="grid grid-cols-2 md:grid-cols-4 gap-8" variants={containerVariants} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+            {[
+              { value: '60,000+', label: 'Active Students' },
+              { value: '5,000+', label: 'Projects Launched' },
+              { value: '150+', label: 'Partner Companies' },
+              { value: '95%', label: 'Success Rate' }
+            ].map((stat, i) => (
+              <motion.div key={i} className="text-center" variants={itemVariants}>
                 <div className="text-4xl md:text-5xl font-bold gradient-text mb-2">{stat.value}</div>
                 <div className="text-deep-blue-300">{stat.label}</div>
               </motion.div>
@@ -213,131 +269,26 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 px-4 relative">
-        <div className="max-w-6xl mx-auto">
-          <motion.div 
-            className="text-center mb-16"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              <span className="gradient-text">Supercharge</span> Your AI Journey
-            </h2>
-            <p className="text-xl text-deep-blue-300 max-w-2xl mx-auto">
-              Everything you need to find, build, and showcase AI projects that matter.
-            </p>
-          </motion.div>
-
-          <motion.div 
-            className="grid md:grid-cols-2 gap-6"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-          >
-            {features.map((feature, index) => (
-              <motion.div
-                key={index}
-                className="card-glass p-8 group hover:border-neon-purple-500/50 transition-all duration-300"
-                variants={itemVariants}
-                whileHover={{ scale: 1.02, y: -5 }}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="p-3 rounded-xl bg-neon-purple-500/20 group-hover:bg-neon-purple-500/30 transition-colors">
-                    <feature.icon className="w-6 h-6 text-neon-purple-400" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold mb-2 text-white">{feature.title}</h3>
-                    <p className="text-deep-blue-300">{feature.description}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section className="py-20 px-4 relative">
-        <div className="max-w-6xl mx-auto">
-          <motion.div 
-            className="text-center mb-16"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              How It <span className="gradient-text">Works</span>
-            </h2>
-            <p className="text-xl text-deep-blue-300">Three simple steps to your perfect AI project</p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { step: '01', title: 'Take the Survey', desc: 'Answer 15 questions about your skills, interests, and goals', icon: GraduationCap },
-              { step: '02', title: 'Get Matched', desc: 'Our AI analyzes your profile and recommends 5 perfect projects', icon: Zap },
-              { step: '03', title: 'Build & Share', desc: 'Follow your roadmap and publish to the community', icon: Rocket }
-            ].map((item, index) => (
-              <motion.div
-                key={index}
-                className="relative"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.2 }}
-              >
-                <div className="card-glass p-8 text-center relative overflow-hidden group">
-                  <div className="absolute top-4 left-4 text-6xl font-bold text-deep-blue-700/50 group-hover:text-neon-purple-500/20 transition-colors">
-                    {item.step}
-                  </div>
-                  <div className="relative z-10">
-                    <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-neon-purple-500 to-cyber-blue flex items-center justify-center">
-                      <item.icon className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="text-xl font-semibold mb-3">{item.title}</h3>
-                    <p className="text-deep-blue-300">{item.desc}</p>
-                  </div>
-                </div>
-                {index < 2 && (
-                  <div className="hidden md:block absolute top-1/2 -right-4 w-8 text-neon-purple-500">
-                    <ArrowRight className="w-8 h-8" />
-                  </div>
-                )}
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-4 relative">
+      {/* ═══════════════════ CTA ═══════════════════ */}
+      <section className="py-24 px-4">
         <div className="max-w-4xl mx-auto">
-          <motion.div 
-            className="card-glass p-12 text-center relative overflow-hidden"
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-          >
+          <motion.div className="card-glass p-12 text-center relative overflow-hidden" initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}>
             <div className="absolute inset-0 bg-gradient-to-r from-neon-purple-500/10 via-transparent to-cyber-blue/10" />
             <div className="relative z-10">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Ready to Find Your <span className="gradient-text">Perfect Project</span>?
-              </h2>
-              <p className="text-xl text-deep-blue-300 mb-8 max-w-2xl mx-auto">
-                Join thousands of students who have already discovered their AI career path through SanaPath AI.
-              </p>
-              <Link to="/survey">
-                <motion.button 
-                  className="btn-primary text-lg"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Start Your Journey
-                  <ArrowRight className="inline-block ml-2 w-5 h-5" />
-                </motion.button>
-              </Link>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Build Your <span className="gradient-text">Career Path</span>?</h2>
+              <p className="text-xl text-deep-blue-300 mb-8 max-w-2xl mx-auto">Join 60,000+ students who are already growing with SanaPath AI.</p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link to="/login">
+                  <motion.button className="btn-primary flex items-center gap-2 text-lg" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    Get Started Free <ArrowRight className="w-5 h-5" />
+                  </motion.button>
+                </Link>
+                <Link to="/survey">
+                  <motion.button className="btn-secondary flex items-center gap-2" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    Try the Survey <ChevronRight className="w-5 h-5" />
+                  </motion.button>
+                </Link>
+              </div>
             </div>
           </motion.div>
         </div>

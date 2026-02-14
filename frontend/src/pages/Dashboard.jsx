@@ -2,84 +2,38 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import {
-  User,
-  Rocket,
-  Target,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  Play,
-  Pause,
-  Trash2,
-  ExternalLink,
-  Plus,
-  BookOpen,
-  TrendingUp,
-  Award,
-  Settings,
-  ChevronRight,
-  Sparkles,
-  Brain,
-  Users,
-  Zap,
-  Flame,
-  Star,
-  Gift,
-  BarChart3
-} from 'lucide-react';
-import Navbar from '../components/Navbar';
+import { useRealStats } from '../hooks/useRealStats';
+import DashboardLayout from '../components/DashboardLayout';
 import { ProgressRing, WeeklyProgressChart, StreakCounter, SkillBars, AnimatedCounter } from '../components/ProgressWidgets';
 import { AchievementCard, achievements as allAchievements } from '../components/Achievements';
-import { QuickActionsCompact } from '../components/QuickActions';
-import { useRealStats } from '../hooks/useRealStats';
+import {
+  User, Rocket, Target, Calendar, CheckCircle2, Clock, Play, Pause,
+  Trash2, Plus, TrendingUp, Award, ChevronRight, Sparkles, Brain,
+  Zap, Flame, Star, Gift, BarChart3, Github, Linkedin, Map,
+  ArrowRight, ExternalLink
+} from 'lucide-react';
 
 const Dashboard = () => {
   const { user, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
   const [activeProjects, setActiveProjects] = useState([]);
-  const [completedProjects, setCompletedProjects] = useState([]);
   const [showAchievements, setShowAchievements] = useState(false);
-
   const { stats, skills, weeklyActivity, unlockedAchievementIds, recalculate } = useRealStats();
 
-  useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      navigate('/login');
-      return;
-    }
+  // Simulated connected state — in real app would come from user profile
+  const [githubConnected, setGithubConnected] = useState(false);
+  const [linkedinConnected, setLinkedinConnected] = useState(false);
 
-    // Load user's projects from localStorage
-    const savedProjects = JSON.parse(localStorage.getItem('userProjects') || '[]');
-    const active = savedProjects.filter(p => p.status !== 'completed');
-    const completed = savedProjects.filter(p => p.status === 'completed');
-    
-    setActiveProjects(active);
-    setCompletedProjects(completed);
+  useEffect(() => {
+    if (!loading && !isAuthenticated) { navigate('/login'); return; }
+    const saved = JSON.parse(localStorage.getItem('userProjects') || '[]');
+    setActiveProjects(saved);
+    // If user has projects, treat as "connected"
+    if (saved.length > 0) { setGithubConnected(true); setLinkedinConnected(true); }
     recalculate();
   }, [isAuthenticated, loading, navigate, recalculate]);
 
-  const handleDeleteProject = (projectId) => {
-    const savedProjects = JSON.parse(localStorage.getItem('userProjects') || '[]');
-    const updated = savedProjects.filter(p => p.id !== projectId);
-    localStorage.setItem('userProjects', JSON.stringify(updated));
-    
-    setActiveProjects(updated.filter(p => p.status !== 'completed'));
-    setCompletedProjects(updated.filter(p => p.status === 'completed'));
-    recalculate();
-  };
-
-  const handleToggleStatus = (projectId) => {
-    const savedProjects = JSON.parse(localStorage.getItem('userProjects') || '[]');
-    const updated = savedProjects.map(p => {
-      if (p.id === projectId) {
-        return { ...p, status: p.status === 'paused' ? 'active' : 'paused' };
-      }
-      return p;
-    });
-    localStorage.setItem('userProjects', JSON.stringify(updated));
-    setActiveProjects(updated.filter(p => p.status !== 'completed'));
-  };
+  const hasData = githubConnected && linkedinConnected;
 
   if (loading) {
     return (
@@ -90,393 +44,376 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-hero-pattern">
-      <Navbar />
-
-      <div className="pt-24 pb-12 px-4">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <motion.div
-            className="mb-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-neon-purple-500 to-cyber-blue flex items-center justify-center overflow-hidden">
-                    {user?.avatar_url ? (
-                      <img src={user.avatar_url} alt={user.name} className="w-full h-full rounded-2xl object-cover" />
-                    ) : (
-                      <User className="w-8 h-8 text-white" />
-                    )}
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-r from-neon-purple-500 to-cyber-blue flex items-center justify-center text-white text-xs font-bold">
-                    {stats.level}
-                  </div>
-                </div>
-                <div>
-                  <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
-                    Welcome back, {user?.name?.split(' ')[0] || 'Student'}! 
-                    <motion.span
-                      animate={{ rotate: [0, 14, -8, 14, -4, 10, 0] }}
-                      transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                    >
-                      👋
-                    </motion.span>
-                  </h1>
-                  <div className="flex items-center gap-3 mt-1">
-                    <span className="text-deep-blue-400">{user?.email}</span>
-                    <span className="px-2 py-0.5 rounded-full bg-neon-purple-500/20 text-neon-purple-400 text-xs flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" />
-                      <AnimatedCounter value={stats.xp} /> XP
-                    </span>
-                  </div>
-                </div>
+    <DashboardLayout>
+      {/* ══════ Top Bar ══════ */}
+      <motion.div className="mb-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-neon-purple-500 to-cyber-blue flex items-center justify-center overflow-hidden">
+                {user?.avatar_url ? (
+                  <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-7 h-7 text-white" />
+                )}
               </div>
-
-              <div className="flex items-center gap-3">
-                <StreakCounter streak={stats.streak} />
-                <Link to="/survey">
-                  <motion.button
-                    className="btn-primary flex items-center gap-2"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Plus className="w-5 h-5" />
-                    New Project
-                  </motion.button>
-                </Link>
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-r from-neon-purple-500 to-cyber-blue flex items-center justify-center text-white text-xs font-bold border-2 border-deep-blue-950">
+                {stats.level}
               </div>
             </div>
-          </motion.div>
+            <div>
+              <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                Hi, {user?.name?.split(' ')[0] || 'Student'} 👋
+              </h1>
+              {hasData ? (
+                <p className="text-deep-blue-400 text-sm">Your current path: <span className="text-neon-purple-400">Junior Backend Developer</span></p>
+              ) : (
+                <p className="text-deep-blue-400 text-sm">Connect your GitHub and LinkedIn to start your path</p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <StreakCounter streak={stats.streak} />
+            <span className="px-3 py-1.5 rounded-full bg-neon-purple-500/20 text-neon-purple-400 text-sm flex items-center gap-1">
+              <Sparkles className="w-3.5 h-3.5" />
+              <AnimatedCounter value={stats.xp} /> XP
+            </span>
+          </div>
+        </div>
+      </motion.div>
 
+      {/* ══════ EMPTY STATE ══════ */}
+      {!hasData && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          {/* Connect Profiles Card */}
+          <div className="card-glass p-10 text-center mb-8">
+            <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-neon-purple-500/20 to-cyber-blue/20 flex items-center justify-center">
+              <Brain className="w-12 h-12 text-neon-purple-400" />
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-3">Connect Your Profiles</h2>
+            <p className="text-deep-blue-300 max-w-md mx-auto mb-8">Link your GitHub and LinkedIn to let our AI analyze your skills and generate a personalized career roadmap.</p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <motion.button
+                onClick={() => setGithubConnected(true)}
+                className={`flex items-center gap-3 px-8 py-4 rounded-xl font-semibold transition-all ${
+                  githubConnected
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                    : 'bg-[#24292e] text-white hover:bg-[#2f363d] hover:shadow-lg'
+                }`}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                {githubConnected ? <CheckCircle2 className="w-5 h-5" /> : <Github className="w-5 h-5" />}
+                {githubConnected ? 'GitHub Connected' : 'Connect GitHub'}
+              </motion.button>
+              <motion.button
+                onClick={() => setLinkedinConnected(true)}
+                className={`flex items-center gap-3 px-8 py-4 rounded-xl font-semibold transition-all ${
+                  linkedinConnected
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                    : 'bg-[#0077B5] text-white hover:bg-[#006097] hover:shadow-lg'
+                }`}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                {linkedinConnected ? <CheckCircle2 className="w-5 h-5" /> : <Linkedin className="w-5 h-5" />}
+                {linkedinConnected ? 'LinkedIn Connected' : 'Connect LinkedIn'}
+              </motion.button>
+            </div>
+          </div>
+
+          {/* Empty Placeholder Widgets */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="card-glass p-5">
+              <div className="flex items-center gap-2 mb-3 text-deep-blue-500"><Map className="w-4 h-4" /> Roadmap Progress</div>
+              <div className="h-2.5 bg-deep-blue-800 rounded-full" />
+              <p className="text-xs text-deep-blue-600 mt-2">No roadmap yet — generate your first one</p>
+            </div>
+            <div className="card-glass p-5">
+              <div className="flex items-center gap-2 mb-3 text-deep-blue-500"><CheckCircle2 className="w-4 h-4" /> This Week's Focus</div>
+              <p className="text-xs text-deep-blue-600">Connect profiles to see tasks</p>
+            </div>
+            <div className="card-glass p-5">
+              <div className="flex items-center gap-2 mb-3 text-deep-blue-500"><Github className="w-4 h-4" /> GitHub Health</div>
+              <div className="text-3xl font-bold text-deep-blue-700">—</div>
+            </div>
+            <div className="card-glass p-5">
+              <div className="flex items-center gap-2 mb-3 text-deep-blue-500"><Linkedin className="w-4 h-4" /> LinkedIn Visibility</div>
+              <div className="text-3xl font-bold text-deep-blue-700">—</div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ══════ FILLED STATE ══════ */}
+      {hasData && (
+        <div className="space-y-6">
+          {/* Row 1 — Big Widgets */}
           <div className="grid lg:grid-cols-3 gap-6">
-            {/* Main Content - Left 2 columns */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Stats Cards */}
-              <motion.div
-                className="grid grid-cols-2 md:grid-cols-4 gap-4"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-              >
-                <div className="card-glass p-4 text-center group hover:border-neon-purple-500/50 transition-all">
-                  <div className="w-12 h-12 rounded-xl bg-neon-purple-500/20 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
-                    <Rocket className="w-6 h-6 text-neon-purple-400" />
-                  </div>
-                  <p className="text-2xl font-bold text-white">
-                    <AnimatedCounter value={stats.totalProjects} />
-                  </p>
-                  <p className="text-sm text-deep-blue-400">Projects</p>
+            {/* Roadmap Progress — Big */}
+            <motion.div className="card-glass p-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+              <h3 className="text-sm font-medium text-deep-blue-400 mb-4 flex items-center gap-2"><Map className="w-4 h-4 text-neon-purple-400" /> Roadmap Progress</h3>
+              <div className="flex items-center gap-6">
+                <ProgressRing progress={45} size={100} strokeWidth={8}>
+                  <span className="text-2xl font-bold text-white">45%</span>
+                </ProgressRing>
+                <div className="flex-1">
+                  <p className="text-white font-semibold mb-1">Step 2 of 5</p>
+                  <p className="text-sm text-deep-blue-400 mb-3">Foundations: Python & APIs</p>
+                  <Link to="/roadmap" className="text-sm text-neon-purple-400 hover:text-neon-purple-300 flex items-center gap-1">
+                    View Roadmap <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
                 </div>
+              </div>
+            </motion.div>
 
-                <div className="card-glass p-4 text-center group hover:border-cyber-blue/50 transition-all">
-                  <div className="w-12 h-12 rounded-xl bg-cyber-blue/20 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
-                    <CheckCircle2 className="w-6 h-6 text-cyber-blue" />
-                  </div>
-                  <p className="text-2xl font-bold text-white">
-                    <AnimatedCounter value={stats.completedTasks} />
-                  </p>
-                  <p className="text-sm text-deep-blue-400">Tasks Done</p>
-                </div>
-
-                <div className="card-glass p-4 text-center group hover:border-green-500/50 transition-all">
-                  <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
-                    <Calendar className="w-6 h-6 text-green-400" />
-                  </div>
-                  <p className="text-2xl font-bold text-white">Week {stats.currentWeek}</p>
-                  <p className="text-sm text-deep-blue-400">Current</p>
-                </div>
-
-                <div className="card-glass p-4 text-center group hover:border-orange-500/50 transition-all">
-                  <div className="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
-                    <Award className="w-6 h-6 text-orange-400" />
-                  </div>
-                  <p className="text-2xl font-bold text-white">
-                    <AnimatedCounter value={unlockedAchievementIds.length} />/{allAchievements.length}
-                  </p>
-                  <p className="text-sm text-deep-blue-400">Achievements</p>
-                </div>
-              </motion.div>
-
-              {/* Active Projects */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                  <Rocket className="w-5 h-5 text-neon-purple-400" />
-                  Active Projects
-                </h2>
-
-                {activeProjects.length === 0 ? (
-                  <div className="card-glass p-8 text-center">
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-neon-purple-500/20 to-cyber-blue/20 flex items-center justify-center mx-auto mb-4">
-                      <Brain className="w-10 h-10 text-neon-purple-400" />
+            {/* This Week's Focus */}
+            <motion.div className="card-glass p-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+              <h3 className="text-sm font-medium text-deep-blue-400 mb-4 flex items-center gap-2"><Target className="w-4 h-4 text-cyber-blue" /> This Week's Focus</h3>
+              <div className="space-y-2.5">
+                {[
+                  { text: 'Build CRUD API with FastAPI', done: true, tag: 'In progress', tagColor: 'bg-yellow-500/20 text-yellow-400' },
+                  { text: 'Write unit tests', done: false, tag: 'To do', tagColor: 'bg-deep-blue-700 text-deep-blue-300' },
+                  { text: 'Improve README', done: false, tag: 'To do', tagColor: 'bg-deep-blue-700 text-deep-blue-300' },
+                  { text: 'Deploy to Render', done: true, tag: 'Done', tagColor: 'bg-green-500/20 text-green-400' },
+                ].map((t, i) => (
+                  <div key={i} className="flex items-center gap-3 group">
+                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                      t.done ? 'bg-green-500 border-green-500' : 'border-deep-blue-600 group-hover:border-neon-purple-500'
+                    }`}>
+                      {t.done && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
                     </div>
-                    <h3 className="text-lg font-semibold text-white mb-2">Ready to start your AI journey?</h3>
-                    <p className="text-deep-blue-400 mb-6 max-w-md mx-auto">
-                      Take our quick survey to get personalized AI project recommendations tailored to your skills and interests.
-                    </p>
-                    <Link to="/survey">
-                      <motion.button 
-                        className="btn-primary"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Zap className="w-4 h-4 mr-2" />
-                        Get AI Project Recommendations
-                      </motion.button>
-                    </Link>
+                    <span className={`text-sm flex-1 ${t.done ? 'text-deep-blue-500 line-through' : 'text-white'}`}>{t.text}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-xs ${t.tagColor}`}>{t.tag}</span>
                   </div>
-                ) : (
-                  <div className="grid gap-4">
-                    {activeProjects.map((project, index) => (
+                ))}
+              </div>
+              <Link to="/tasks" className="mt-4 block text-sm text-neon-purple-400 hover:text-neon-purple-300 flex items-center gap-1">
+                All tasks <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </motion.div>
+
+            {/* Next Milestones */}
+            <motion.div className="card-glass p-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+              <h3 className="text-sm font-medium text-deep-blue-400 mb-4 flex items-center gap-2"><Rocket className="w-4 h-4 text-orange-400" /> Next Milestones</h3>
+              <div className="space-y-3">
+                {[
+                  { step: 1, title: 'Python Basics', status: 'done' },
+                  { step: 2, title: 'APIs & Databases', status: 'active' },
+                  { step: 3, title: 'Testing & CI/CD', status: 'locked' },
+                  { step: 4, title: 'Deploy & Portfolio', status: 'locked' },
+                ].map((m) => (
+                  <div key={m.step} className={`flex items-center gap-3 p-2.5 rounded-lg ${
+                    m.status === 'active' ? 'bg-neon-purple-500/10 border border-neon-purple-500/30' : 'bg-deep-blue-800/30'
+                  }`}>
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
+                      m.status === 'done' ? 'bg-green-500 text-white'
+                        : m.status === 'active' ? 'bg-gradient-to-br from-neon-purple-500 to-cyber-blue text-white'
+                        : 'bg-deep-blue-700 text-deep-blue-500'
+                    }`}>
+                      {m.status === 'done' ? <CheckCircle2 className="w-4 h-4" /> : m.step}
+                    </div>
+                    <span className={`text-sm ${m.status === 'locked' ? 'text-deep-blue-500' : 'text-white'}`}>{m.title}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Row 2 — GitHub / LinkedIn / Streak / XP */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* GitHub Health */}
+            <motion.div className="card-glass p-5" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-deep-blue-400 flex items-center gap-1.5"><Github className="w-4 h-4" /> GitHub Health</span>
+                <span className="text-xl font-bold text-green-400">72%</span>
+              </div>
+              <div className="h-2 bg-deep-blue-800 rounded-full overflow-hidden mb-3">
+                <motion.div className="h-full bg-green-500 rounded-full" initial={{ width: 0 }} animate={{ width: '72%' }} transition={{ duration: 1 }} />
+              </div>
+              <div className="space-y-1.5 text-xs">
+                <div className="flex justify-between text-deep-blue-400"><span>Repos</span><span className="text-white">12</span></div>
+                <div className="flex justify-between text-deep-blue-400"><span>Stars</span><span className="text-white">34</span></div>
+                <div className="flex justify-between text-deep-blue-400"><span>Activity</span><span className="text-green-400">Active</span></div>
+                <div className="flex justify-between text-deep-blue-400"><span>Tests</span><span className="text-yellow-400">Partial</span></div>
+              </div>
+            </motion.div>
+
+            {/* LinkedIn Visibility */}
+            <motion.div className="card-glass p-5" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-deep-blue-400 flex items-center gap-1.5"><Linkedin className="w-4 h-4" /> LinkedIn Visibility</span>
+                <span className="text-xl font-bold text-[#0077B5]">58%</span>
+              </div>
+              <div className="h-2 bg-deep-blue-800 rounded-full overflow-hidden mb-3">
+                <motion.div className="h-full bg-[#0077B5] rounded-full" initial={{ width: 0 }} animate={{ width: '58%' }} transition={{ duration: 1 }} />
+              </div>
+              <div className="space-y-1.5 text-xs">
+                <div className="flex items-center gap-2 text-deep-blue-400"><CheckCircle2 className="w-3 h-3 text-green-400" /> Headline optimized</div>
+                <div className="flex items-center gap-2 text-deep-blue-400"><CheckCircle2 className="w-3 h-3 text-green-400" /> Keywords for backend roles</div>
+                <div className="flex items-center gap-2 text-deep-blue-400"><Clock className="w-3 h-3 text-yellow-400" /> Add project descriptions</div>
+              </div>
+            </motion.div>
+
+            {/* Streak */}
+            <motion.div className="card-glass p-5" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+              <div className="text-sm text-deep-blue-400 mb-2 flex items-center gap-1.5"><Flame className="w-4 h-4 text-orange-400" /> Streak</div>
+              <div className="flex items-end gap-2 mb-2">
+                <span className="text-4xl font-bold text-orange-400">{stats.streak}</span>
+                <span className="text-deep-blue-400 text-sm pb-1">weeks in a row</span>
+              </div>
+              <div className="flex gap-1">
+                {[1,2,3,4,5,6,7].map(w => (
+                  <div key={w} className={`flex-1 h-2 rounded-full ${w <= stats.streak ? 'bg-orange-400' : 'bg-deep-blue-700'}`} />
+                ))}
+              </div>
+              <p className="text-xs text-deep-blue-500 mt-2">Keep going! 🔥</p>
+            </motion.div>
+
+            {/* Career XP */}
+            <motion.div className="card-glass p-5" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+              <div className="text-sm text-deep-blue-400 mb-2 flex items-center gap-1.5"><Star className="w-4 h-4 text-yellow-400" /> Career XP</div>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="text-3xl font-bold text-white">Level {stats.level}</div>
+                <span className="text-deep-blue-400 text-sm">/ 10</span>
+              </div>
+              <div className="h-2.5 bg-deep-blue-800 rounded-full overflow-hidden mb-2">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-neon-purple-500 to-cyber-blue rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${((stats.xp % 500) / 500) * 100}%` }}
+                  transition={{ duration: 1 }}
+                />
+              </div>
+              <p className="text-xs text-deep-blue-400">{stats.xp} / {(stats.level) * 500 + 500} XP</p>
+            </motion.div>
+          </div>
+
+          {/* Row 3 — Active Projects + Weekly Chart + Skills */}
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Active Projects */}
+            <div className="lg:col-span-2 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2"><Rocket className="w-5 h-5 text-neon-purple-400" /> Active Projects</h3>
+                <Link to="/survey" className="flex items-center gap-1 text-sm text-neon-purple-400 hover:text-neon-purple-300">
+                  <Plus className="w-4 h-4" /> New Project
+                </Link>
+              </div>
+
+              {activeProjects.length === 0 ? (
+                <div className="card-glass p-8 text-center">
+                  <Brain className="w-12 h-12 text-neon-purple-400 mx-auto mb-3" />
+                  <h3 className="text-lg font-semibold text-white mb-2">Start your first project</h3>
+                  <p className="text-deep-blue-400 mb-4 text-sm">Take our survey to get AI-matched project recommendations.</p>
+                  <Link to="/survey">
+                    <motion.button className="btn-primary text-sm" whileHover={{ scale: 1.05 }}>
+                      <Zap className="w-4 h-4 mr-2" /> Get Recommendations
+                    </motion.button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {activeProjects.slice(0, 3).map((p, i) => (
+                    <Link key={p.id} to={`/project/${p.id}`}>
                       <motion.div
-                        key={project.id}
-                        className="card-glass p-6 hover:border-neon-purple-500/50 transition-colors"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
+                        className="card-glass p-5 hover:border-neon-purple-500/50 transition-colors cursor-pointer"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.1 }}
                       >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                project.status === 'active' 
-                                  ? 'bg-green-500/20 text-green-400' 
-                                  : 'bg-yellow-500/20 text-yellow-400'
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`px-2 py-0.5 rounded-full text-xs ${
+                                p.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
                               }`}>
-                                {project.status === 'active' ? '🚀 In Progress' : '⏸️ Paused'}
+                                {p.status === 'active' ? 'In Progress' : 'Paused'}
                               </span>
-                              <span className="text-deep-blue-500 text-sm">
-                                Week {project.currentWeek || 1} of 4
-                              </span>
+                              <span className="text-xs text-deep-blue-500">Week {p.currentWeek || 1}/4</span>
                             </div>
-
-                            <h3 className="text-lg font-bold text-white mb-1">{project.title}</h3>
-                            <p className="text-deep-blue-400 text-sm mb-3 line-clamp-2">{project.description}</p>
-
-                            <div className="flex flex-wrap gap-2 mb-4">
-                              {project.tech_stack?.slice(0, 4).map((tech, i) => (
-                                <span key={i} className="px-2 py-1 rounded-lg bg-deep-blue-800/50 text-xs text-cyber-blue">
-                                  {tech}
-                                </span>
+                            <h4 className="text-white font-semibold truncate">{p.title}</h4>
+                            <div className="flex gap-1.5 mt-2 flex-wrap">
+                              {p.tech_stack?.slice(0, 3).map((t, j) => (
+                                <span key={j} className="px-2 py-0.5 rounded bg-deep-blue-800/80 text-xs text-cyber-blue">{t}</span>
                               ))}
-                              {project.tech_stack?.length > 4 && (
-                                <span className="px-2 py-1 rounded-lg bg-deep-blue-800/50 text-xs text-deep-blue-400">
-                                  +{project.tech_stack.length - 4} more
-                                </span>
-                              )}
-                            </div>
-
-                            {/* Progress Bar */}
-                            <div className="mb-2">
-                              <div className="flex justify-between text-xs text-deep-blue-400 mb-1">
-                                <span>Progress</span>
-                                <span>{(() => { const ct = project.completedTasks || {}; const total = project.roadmap?.reduce((a,w) => a + (w.tasks?.length || 0), 0) || 1; const done = Object.values(ct).filter(Boolean).length; return Math.round((done/total)*100); })()}%</span>
-                              </div>
-                              <div className="h-2 bg-deep-blue-800 rounded-full overflow-hidden">
-                                <motion.div 
-                                  className="h-full bg-gradient-to-r from-neon-purple-500 to-cyber-blue rounded-full"
-                                  initial={{ width: 0 }}
-                                  animate={{ width: `${(() => { const ct = project.completedTasks || {}; const total = project.roadmap?.reduce((a,w) => a + (w.tasks?.length || 0), 0) || 1; const done = Object.values(ct).filter(Boolean).length; return Math.round((done/total)*100); })()}%` }}
-                                  transition={{ duration: 1, ease: "easeOut" }}
-                                />
-                              </div>
                             </div>
                           </div>
-
-                          <div className="flex flex-col gap-2">
-                            <Link to={`/project/${project.id}`}>
-                              <motion.button 
-                                className="p-2 rounded-lg bg-neon-purple-500/20 hover:bg-neon-purple-500/30 text-neon-purple-400 transition-colors"
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                              >
-                                <ChevronRight className="w-5 h-5" />
-                              </motion.button>
-                            </Link>
-                            <motion.button 
-                              onClick={() => handleToggleStatus(project.id)}
-                              className="p-2 rounded-lg bg-deep-blue-700/50 hover:bg-deep-blue-700 text-deep-blue-300 transition-colors"
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                            >
-                              {project.status === 'active' ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                            </motion.button>
-                            <motion.button 
-                              onClick={() => handleDeleteProject(project.id)}
-                              className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-colors"
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                            >
-                              <Trash2 className="w-5 h-5" />
-                            </motion.button>
-                          </div>
+                          <ChevronRight className="w-5 h-5 text-deep-blue-500 flex-shrink-0" />
                         </div>
                       </motion.div>
-                    ))}
-                  </div>
-                )}
-              </motion.div>
+                    </Link>
+                  ))}
+                </div>
+              )}
 
-              {/* Weekly Progress Chart */}
-              <motion.div
-                className="card-glass p-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-cyber-blue" />
-                  Weekly Activity
-                </h3>
+              {/* Weekly Activity */}
+              <motion.div className="card-glass p-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                <h3 className="text-sm font-medium text-deep-blue-400 mb-4 flex items-center gap-2"><BarChart3 className="w-4 h-4 text-cyber-blue" /> Weekly Activity</h3>
                 <WeeklyProgressChart data={weeklyActivity} />
               </motion.div>
             </div>
 
-            {/* Sidebar - Right column */}
+            {/* Right Column — Skills + Achievements */}
             <div className="space-y-6">
-              {/* Level Progress */}
-              <motion.div
-                className="card-glass p-6"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                  <Star className="w-5 h-5 text-yellow-400" />
-                  Level Progress
-                </h3>
-                <div className="flex items-center gap-6">
-                  <ProgressRing 
-                    progress={(stats.xp % 500) / 500 * 100} 
-                    size={100} 
-                    strokeWidth={8}
-                  >
-                    <span className="text-white font-bold text-sm">Level {stats.level}</span>
-                  </ProgressRing>
-                  <div>
-                    <p className="text-white font-semibold">{stats.xp} XP</p>
-                    <p className="text-sm text-deep-blue-400">{500 - (stats.xp % 500)} XP to Level {stats.level + 1}</p>
-                    <div className="mt-2 flex items-center gap-1">
-                      <Gift className="w-4 h-4 text-neon-purple-400" />
-                      <span className="text-xs text-neon-purple-400">Reward unlocks at Level {stats.level + 1}</span>
-                    </div>
-                  </div>
-                </div>
+              <motion.div className="card-glass p-6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }}>
+                <h3 className="text-sm font-medium text-deep-blue-400 mb-4 flex items-center gap-2"><Zap className="w-4 h-4 text-cyber-blue" /> Your Skills</h3>
+                <SkillBars skills={skills.length > 0 ? skills : [{ name: 'Start a project first', color: '#8B5CF6', colorEnd: '#7C3AED', level: 0 }]} />
+                <Link to="/skills" className="mt-4 block text-sm text-neon-purple-400 hover:text-neon-purple-300 flex items-center gap-1">
+                  Full skills map <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
               </motion.div>
 
-              {/* Skills */}
-              <motion.div
-                className="card-glass p-6"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-cyber-blue" />
-                  Your Skills
-                </h3>
-                <SkillBars skills={skills.length > 0 ? skills : [{ name: 'Start a project to track skills', color: '#8B5CF6', colorEnd: '#7C3AED', level: 0 }]} />
-              </motion.div>
-
-              {/* Achievements Preview */}
-              <motion.div
-                className="card-glass p-6"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 }}
-              >
+              <motion.div className="card-glass p-6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.35 }}>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <Award className="w-5 h-5 text-orange-400" />
-                    Recent Achievements
-                  </h3>
-                  <button 
-                    onClick={() => setShowAchievements(true)}
-                    className="text-sm text-neon-purple-400 hover:text-neon-purple-300 transition-colors"
-                  >
-                    View All
-                  </button>
+                  <h3 className="text-sm font-medium text-deep-blue-400 flex items-center gap-2"><Award className="w-4 h-4 text-orange-400" /> Achievements</h3>
+                  <button onClick={() => setShowAchievements(true)} className="text-xs text-neon-purple-400 hover:text-neon-purple-300">View All</button>
                 </div>
-                <div className="space-y-3">
-                  {allAchievements.filter(a => unlockedAchievementIds.includes(a.id)).slice(0, 3).map((achievement) => (
-                    <div 
-                      key={achievement.id}
-                      className="flex items-center gap-3 p-3 rounded-lg bg-deep-blue-800/30"
-                    >
-                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${achievement.color} flex items-center justify-center`}>
-                        <achievement.icon className="w-5 h-5 text-white" />
+                <div className="space-y-2.5">
+                  {allAchievements.filter(a => unlockedAchievementIds.includes(a.id)).slice(0, 3).map((a) => (
+                    <div key={a.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-deep-blue-800/30">
+                      <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${a.color} flex items-center justify-center`}>
+                        <a.icon className="w-4 h-4 text-white" />
                       </div>
                       <div>
-                        <p className="text-white font-medium text-sm">{achievement.title}</p>
-                        <p className="text-xs text-deep-blue-400">+{achievement.points} XP</p>
+                        <p className="text-white text-sm font-medium">{a.title}</p>
+                        <p className="text-xs text-deep-blue-500">+{a.points} XP</p>
                       </div>
                     </div>
                   ))}
+                  {unlockedAchievementIds.length === 0 && (
+                    <p className="text-xs text-deep-blue-500 text-center py-2">Complete tasks to unlock achievements</p>
+                  )}
                 </div>
               </motion.div>
 
-              {/* Quick Actions */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                <QuickActionsCompact />
-              </motion.div>
+              {/* Motivational Text */}
+              <div className="card-glass p-4 bg-gradient-to-r from-neon-purple-500/10 to-cyber-blue/10">
+                <p className="text-sm text-deep-blue-200 text-center italic">
+                  "You're 1 step closer to your first junior role" 🚀
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Achievements Modal */}
       <AnimatePresence>
         {showAchievements && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setShowAchievements(false)}
-          >
-            <motion.div
-              className="w-full max-w-3xl max-h-[80vh] overflow-auto card-glass rounded-2xl p-6"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-            >
+          <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowAchievements(false)}>
+            <motion.div className="w-full max-w-3xl max-h-[80vh] overflow-auto card-glass rounded-2xl p-6" initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                  <Award className="w-6 h-6 text-orange-400" />
-                  All Achievements
-                </h2>
-                <button 
-                  onClick={() => setShowAchievements(false)}
-                  className="p-2 rounded-lg hover:bg-deep-blue-700 text-deep-blue-400 hover:text-white transition-colors"
-                >
-                  ✕
-                </button>
+                <h2 className="text-2xl font-bold text-white flex items-center gap-2"><Award className="w-6 h-6 text-orange-400" /> All Achievements</h2>
+                <button onClick={() => setShowAchievements(false)} className="p-2 rounded-lg hover:bg-deep-blue-700 text-deep-blue-400 hover:text-white">✕</button>
               </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {allAchievements.map((achievement) => (
-                  <AchievementCard
-                    key={achievement.id}
-                    achievement={achievement}
-                    isUnlocked={unlockedAchievementIds.includes(achievement.id)}
-                  />
-                ))}
+                {allAchievements.map(a => <AchievementCard key={a.id} achievement={a} isUnlocked={unlockedAchievementIds.includes(a.id)} />)}
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </DashboardLayout>
   );
 };
 
