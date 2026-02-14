@@ -111,6 +111,9 @@ const Landing = () => {
               <div className="absolute -inset-4 bg-gradient-to-r from-neon-purple-500/20 via-cyber-blue/20 to-neon-purple-500/20 blur-3xl rounded-3xl" />
 
               <div className="relative card-glass p-6 rounded-2xl">
+                {/* Demo badge */}
+                <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-neon-purple-500/20 border border-neon-purple-500/30 text-neon-purple-300 text-[10px] font-bold uppercase tracking-wider z-10">Demo Preview</div>
+
                 {/* Mini top bar */}
                 <div className="flex items-center justify-between mb-5">
                   <div className="flex items-center gap-3">
@@ -118,7 +121,7 @@ const Landing = () => {
                       <BrainCircuit className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <p className="text-white font-semibold text-sm">Hi, Alizhan 👋</p>
+                      <p className="text-white font-semibold text-sm">Hi, Student 👋</p>
                       <p className="text-deep-blue-400 text-xs">Junior Backend Developer</p>
                     </div>
                   </div>
