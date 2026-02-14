@@ -1,70 +1,90 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import DashboardLayout from '../components/DashboardLayout';
+import { useRealStats } from '../hooks/useRealStats';
+import { useRoadmapData } from '../hooks/useRoadmapData';
 import { Code2, Database, Brain, Cloud, Users, BarChart3, ArrowUpRight, Sparkles } from 'lucide-react';
 
-const skillAreas = [
+/**
+ * Default skill categories — used as base structure.
+ * Actual levels come from useRealStats (project-based) when available,
+ * otherwise show these defaults so the page isn't empty.
+ */
+const defaultSkillAreas = [
   {
     id: 1, name: 'Backend Development', icon: Code2, color: 'from-violet-500 to-purple-600',
+    techs: ['Python', 'FastAPI', 'REST APIs', 'Flask', 'Node.js'],
     skills: [
-      { name: 'Python', level: 72, rank: 'Intermediate' },
-      { name: 'FastAPI', level: 45, rank: 'Beginner+' },
-      { name: 'REST APIs', level: 60, rank: 'Intermediate' },
-      { name: 'Authentication', level: 30, rank: 'Beginner' },
+      { name: 'Python', level: 0, rank: 'Beginner' },
+      { name: 'FastAPI', level: 0, rank: 'Beginner' },
+      { name: 'REST APIs', level: 0, rank: 'Beginner' },
+      { name: 'Authentication', level: 0, rank: 'Beginner' },
     ],
-    nextHint: 'Build a CRUD API with auth to reach Intermediate+ in FastAPI',
+    nextHint: 'Build a CRUD API with auth to level up FastAPI',
   },
   {
     id: 2, name: 'Databases', icon: Database, color: 'from-cyan-500 to-blue-600',
+    techs: ['PostgreSQL', 'MongoDB', 'SQLAlchemy'],
     skills: [
-      { name: 'SQL', level: 55, rank: 'Intermediate' },
-      { name: 'PostgreSQL', level: 35, rank: 'Beginner' },
-      { name: 'SQLAlchemy', level: 25, rank: 'Beginner' },
-      { name: 'Data Modeling', level: 40, rank: 'Beginner+' },
+      { name: 'SQL', level: 0, rank: 'Beginner' },
+      { name: 'PostgreSQL', level: 0, rank: 'Beginner' },
+      { name: 'SQLAlchemy', level: 0, rank: 'Beginner' },
+      { name: 'Data Modeling', level: 0, rank: 'Beginner' },
     ],
     nextHint: 'Practice complex queries and relationships in PostgreSQL',
   },
   {
     id: 3, name: 'Algorithms & DS', icon: BarChart3, color: 'from-emerald-500 to-green-600',
+    techs: [],
     skills: [
-      { name: 'Arrays & Strings', level: 65, rank: 'Intermediate' },
-      { name: 'Sorting & Search', level: 50, rank: 'Intermediate' },
-      { name: 'Trees & Graphs', level: 20, rank: 'Beginner' },
-      { name: 'Dynamic Programming', level: 10, rank: 'Beginner' },
+      { name: 'Arrays & Strings', level: 0, rank: 'Beginner' },
+      { name: 'Sorting & Search', level: 0, rank: 'Beginner' },
+      { name: 'Trees & Graphs', level: 0, rank: 'Beginner' },
+      { name: 'Dynamic Programming', level: 0, rank: 'Beginner' },
     ],
     nextHint: 'Solve 5 medium LeetCode problems on trees to level up',
   },
   {
     id: 4, name: 'Machine Learning', icon: Brain, color: 'from-pink-500 to-rose-600',
+    techs: ['Pandas', 'scikit-learn', 'PyTorch', 'TensorFlow', 'Machine Learning', 'Deep Learning', 'NLP', 'Computer Vision'],
     skills: [
-      { name: 'pandas', level: 40, rank: 'Beginner+' },
-      { name: 'scikit-learn', level: 15, rank: 'Beginner' },
-      { name: 'Data Analysis', level: 35, rank: 'Beginner' },
-      { name: 'Model Evaluation', level: 10, rank: 'Beginner' },
+      { name: 'pandas', level: 0, rank: 'Beginner' },
+      { name: 'scikit-learn', level: 0, rank: 'Beginner' },
+      { name: 'Data Analysis', level: 0, rank: 'Beginner' },
+      { name: 'Model Evaluation', level: 0, rank: 'Beginner' },
     ],
     nextHint: 'Complete an EDA project on Kaggle to practice pandas',
   },
   {
     id: 5, name: 'DevOps & Cloud', icon: Cloud, color: 'from-amber-500 to-orange-600',
+    techs: ['Docker', 'GitHub Actions'],
     skills: [
-      { name: 'Docker', level: 20, rank: 'Beginner' },
-      { name: 'CI/CD', level: 10, rank: 'Beginner' },
-      { name: 'Linux/CLI', level: 50, rank: 'Intermediate' },
-      { name: 'Cloud Deploy', level: 30, rank: 'Beginner' },
+      { name: 'Docker', level: 0, rank: 'Beginner' },
+      { name: 'CI/CD', level: 0, rank: 'Beginner' },
+      { name: 'Linux/CLI', level: 0, rank: 'Beginner' },
+      { name: 'Cloud Deploy', level: 0, rank: 'Beginner' },
     ],
     nextHint: 'Dockerize your FastAPI project to get started with DevOps',
   },
   {
     id: 6, name: 'Soft Skills', icon: Users, color: 'from-indigo-500 to-violet-600',
+    techs: [],
     skills: [
-      { name: 'Communication', level: 70, rank: 'Intermediate' },
-      { name: 'Teamwork', level: 65, rank: 'Intermediate' },
-      { name: 'Technical Writing', level: 45, rank: 'Beginner+' },
-      { name: 'Interview Skills', level: 25, rank: 'Beginner' },
+      { name: 'Communication', level: 0, rank: 'Beginner' },
+      { name: 'Teamwork', level: 0, rank: 'Beginner' },
+      { name: 'Technical Writing', level: 0, rank: 'Beginner' },
+      { name: 'Interview Skills', level: 0, rank: 'Beginner' },
     ],
     nextHint: 'Write a technical blog post about your latest project',
   },
 ];
+
+function getRank(level) {
+  if (level >= 80) return 'Advanced';
+  if (level >= 50) return 'Intermediate';
+  if (level >= 25) return 'Beginner+';
+  return 'Beginner';
+}
 
 const rankColors = {
   'Beginner': 'text-deep-blue-400',
@@ -73,15 +93,59 @@ const rankColors = {
   'Advanced': 'text-green-400',
 };
 
+/**
+ * Merge real project-based skills (from useRealStats) into default categories.
+ * This ensures Dashboard "Your Skills" and Skills Map show consistent data.
+ */
+function mergeSkills(defaultAreas, realSkills, roadmapSteps) {
+  // Build a lookup: tech name → level from real project data
+  const realMap = {};
+  realSkills.forEach(s => { realMap[s.name] = s.level; });
+
+  // Also compute progress boost from roadmap task completion per step
+  const stepBoosts = {};
+  roadmapSteps.forEach(step => {
+    const tasks = step.tasks || [];
+    if (tasks.length === 0) return;
+    const done = tasks.filter(t => t.status === 'done').length;
+    const ratio = done / tasks.length;
+    (step.skills || []).forEach(sk => {
+      stepBoosts[sk] = Math.max(stepBoosts[sk] || 0, Math.round(ratio * 40 + (done > 0 ? 15 : 0)));
+    });
+  });
+
+  return defaultAreas.map(area => {
+    const updatedSkills = area.skills.map(sk => {
+      // Priority: real project data > roadmap step boost > default 0
+      let level = realMap[sk.name] || stepBoosts[sk.name] || sk.level;
+      // Also check if any of the area's linked techs have real data
+      if (level === 0 && area.techs) {
+        const matchedTech = area.techs.find(t => realMap[t]);
+        if (matchedTech) level = Math.max(level, Math.round(realMap[matchedTech] * 0.6));
+      }
+      level = Math.min(level, 100);
+      return { ...sk, level, rank: getRank(level) };
+    });
+    return { ...area, skills: updatedSkills };
+  });
+}
+
 const SkillsMap = () => {
+  const { skills: realSkills } = useRealStats();
+  const { steps } = useRoadmapData();
   const [selectedArea, setSelectedArea] = useState(null);
-  const totalSkillScore = Math.round(skillAreas.reduce((sum, a) => sum + a.skills.reduce((s, sk) => s + sk.level, 0), 0) / (skillAreas.length * 4));
+
+  const skillAreas = mergeSkills(defaultSkillAreas, realSkills, steps);
+  const totalSkillScore = Math.round(
+    skillAreas.reduce((sum, a) => sum + a.skills.reduce((s, sk) => s + sk.level, 0), 0) /
+    (skillAreas.length * 4)
+  );
 
   return (
     <DashboardLayout>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
         <h1 className="text-2xl font-bold text-white mb-1">Skills Map</h1>
-        <p className="text-deep-blue-400 text-sm">Track your progress across all skill areas</p>
+        <p className="text-deep-blue-400 text-sm">Track your progress across all skill areas · Updated from your projects & tasks</p>
       </motion.div>
 
       {/* Overall Score */}

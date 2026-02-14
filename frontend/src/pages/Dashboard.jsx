@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useRealStats } from '../hooks/useRealStats';
+import { useRoadmapData } from '../hooks/useRoadmapData';
 import DashboardLayout from '../components/DashboardLayout';
 import { ProgressRing, WeeklyProgressChart, StreakCounter, SkillBars, AnimatedCounter } from '../components/ProgressWidgets';
 import { AchievementCard, achievements as allAchievements } from '../components/Achievements';
@@ -19,6 +20,7 @@ const Dashboard = () => {
   const [activeProjects, setActiveProjects] = useState([]);
   const [showAchievements, setShowAchievements] = useState(false);
   const { stats, skills, weeklyActivity, unlockedAchievementIds, recalculate } = useRealStats();
+  const { steps, weekTasks, overallProgress, currentStep, doneTasks, totalTasks, toggleTaskStatus } = useRoadmapData();
 
   // Simulated connected state — in real app would come from user profile
   const [githubConnected, setGithubConnected] = useState(false);
@@ -154,12 +156,13 @@ const Dashboard = () => {
             <motion.div className="card-glass p-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
               <h3 className="text-sm font-medium text-deep-blue-400 mb-4 flex items-center gap-2"><Map className="w-4 h-4 text-neon-purple-400" /> Roadmap Progress</h3>
               <div className="flex items-center gap-6">
-                <ProgressRing progress={45} size={100} strokeWidth={8}>
-                  <span className="text-2xl font-bold text-white">45%</span>
+                <ProgressRing progress={overallProgress} size={100} strokeWidth={8}>
+                  <span className="text-2xl font-bold text-white">{overallProgress}%</span>
                 </ProgressRing>
                 <div className="flex-1">
-                  <p className="text-white font-semibold mb-1">Step 2 of 5</p>
-                  <p className="text-sm text-deep-blue-400 mb-3">Foundations: Python & APIs</p>
+                  <p className="text-white font-semibold mb-1">Step {currentStep?.step || 1} of {steps.length}</p>
+                  <p className="text-sm text-deep-blue-400 mb-1">{currentStep?.title || 'Getting started'}</p>
+                  <p className="text-xs text-deep-blue-500 mb-3">{doneTasks}/{totalTasks} tasks completed</p>
                   <Link to="/roadmap" className="text-sm text-neon-purple-400 hover:text-neon-purple-300 flex items-center gap-1">
                     View Roadmap <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
@@ -171,22 +174,24 @@ const Dashboard = () => {
             <motion.div className="card-glass p-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
               <h3 className="text-sm font-medium text-deep-blue-400 mb-4 flex items-center gap-2"><Target className="w-4 h-4 text-cyber-blue" /> This Week's Focus</h3>
               <div className="space-y-2.5">
-                {[
-                  { text: 'Build CRUD API with FastAPI', done: true, tag: 'In progress', tagColor: 'bg-yellow-500/20 text-yellow-400' },
-                  { text: 'Write unit tests', done: false, tag: 'To do', tagColor: 'bg-deep-blue-700 text-deep-blue-300' },
-                  { text: 'Improve README', done: false, tag: 'To do', tagColor: 'bg-deep-blue-700 text-deep-blue-300' },
-                  { text: 'Deploy to Render', done: true, tag: 'Done', tagColor: 'bg-green-500/20 text-green-400' },
-                ].map((t, i) => (
-                  <div key={i} className="flex items-center gap-3 group">
+                {weekTasks.slice(0, 4).map((t) => (
+                  <div key={t.id} className="flex items-center gap-3 group cursor-pointer" onClick={() => toggleTaskStatus(t.id)}>
                     <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                      t.done ? 'bg-green-500 border-green-500' : 'border-deep-blue-600 group-hover:border-neon-purple-500'
+                      t.status === 'done' ? 'bg-green-500 border-green-500' : 'border-deep-blue-600 group-hover:border-neon-purple-500'
                     }`}>
-                      {t.done && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                      {t.status === 'done' && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
                     </div>
-                    <span className={`text-sm flex-1 ${t.done ? 'text-deep-blue-500 line-through' : 'text-white'}`}>{t.text}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs ${t.tagColor}`}>{t.tag}</span>
+                    <span className={`text-sm flex-1 ${t.status === 'done' ? 'text-deep-blue-500 line-through' : 'text-white'}`}>{t.title}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-xs ${
+                      t.status === 'done' ? 'bg-green-500/20 text-green-400' :
+                      t.status === 'in-progress' ? 'bg-yellow-500/20 text-yellow-400' :
+                      'bg-deep-blue-700 text-deep-blue-300'
+                    }`}>
+                      {t.status === 'done' ? 'Done' : t.status === 'in-progress' ? 'In Progress' : 'To Do'}
+                    </span>
                   </div>
                 ))}
+                {weekTasks.length === 0 && <p className="text-xs text-deep-blue-500">No tasks this week</p>}
               </div>
               <Link to="/tasks" className="mt-4 block text-sm text-neon-purple-400 hover:text-neon-purple-300 flex items-center gap-1">
                 All tasks <ArrowRight className="w-3.5 h-3.5" />
@@ -195,25 +200,27 @@ const Dashboard = () => {
 
             {/* Next Milestones */}
             <motion.div className="card-glass p-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-              <h3 className="text-sm font-medium text-deep-blue-400 mb-4 flex items-center gap-2"><Rocket className="w-4 h-4 text-orange-400" /> Next Milestones</h3>
+              <h3 className="text-sm font-medium text-deep-blue-400 mb-4 flex items-center gap-2"><Rocket className="w-4 h-4 text-orange-400" /> Milestones</h3>
               <div className="space-y-3">
-                {[
-                  { step: 1, title: 'Python Basics', status: 'done' },
-                  { step: 2, title: 'APIs & Databases', status: 'active' },
-                  { step: 3, title: 'Testing & CI/CD', status: 'locked' },
-                  { step: 4, title: 'Deploy & Portfolio', status: 'locked' },
-                ].map((m) => (
-                  <div key={m.step} className={`flex items-center gap-3 p-2.5 rounded-lg ${
-                    m.status === 'active' ? 'bg-neon-purple-500/10 border border-neon-purple-500/30' : 'bg-deep-blue-800/30'
+                {steps.slice(0, 5).map((s) => (
+                  <div key={s.step} className={`flex items-center gap-3 p-2.5 rounded-lg ${
+                    s._status === 'in-progress' ? 'bg-neon-purple-500/10 border border-neon-purple-500/30' : 'bg-deep-blue-800/30'
                   }`}>
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
-                      m.status === 'done' ? 'bg-green-500 text-white'
-                        : m.status === 'active' ? 'bg-gradient-to-br from-neon-purple-500 to-cyber-blue text-white'
+                      s._status === 'completed' ? 'bg-green-500 text-white'
+                        : s._status === 'in-progress' ? 'bg-gradient-to-br from-neon-purple-500 to-cyber-blue text-white'
                         : 'bg-deep-blue-700 text-deep-blue-500'
                     }`}>
-                      {m.status === 'done' ? <CheckCircle2 className="w-4 h-4" /> : m.step}
+                      {s._status === 'completed' ? <CheckCircle2 className="w-4 h-4" /> : s.step}
                     </div>
-                    <span className={`text-sm ${m.status === 'locked' ? 'text-deep-blue-500' : 'text-white'}`}>{m.title}</span>
+                    <div className="flex-1 min-w-0">
+                      <span className={`text-sm ${s._status === 'locked' ? 'text-deep-blue-500' : 'text-white'}`}>{s.title.split(':')[0]}</span>
+                      {s._progress > 0 && s._status !== 'completed' && (
+                        <div className="w-full h-1 rounded-full bg-deep-blue-800 mt-1 overflow-hidden">
+                          <div className="h-full bg-neon-purple-400 rounded-full" style={{ width: `${s._progress}%` }} />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -224,35 +231,54 @@ const Dashboard = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* GitHub Health */}
             <motion.div className="card-glass p-5" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm text-deep-blue-400 flex items-center gap-1.5"><Github className="w-4 h-4" /> GitHub Health</span>
-                <span className="text-xl font-bold text-green-400">72%</span>
-              </div>
-              <div className="h-2 bg-deep-blue-800 rounded-full overflow-hidden mb-3">
-                <motion.div className="h-full bg-green-500 rounded-full" initial={{ width: 0 }} animate={{ width: '72%' }} transition={{ duration: 1 }} />
-              </div>
-              <div className="space-y-1.5 text-xs">
-                <div className="flex justify-between text-deep-blue-400"><span>Repos</span><span className="text-white">12</span></div>
-                <div className="flex justify-between text-deep-blue-400"><span>Stars</span><span className="text-white">34</span></div>
-                <div className="flex justify-between text-deep-blue-400"><span>Activity</span><span className="text-green-400">Active</span></div>
-                <div className="flex justify-between text-deep-blue-400"><span>Tests</span><span className="text-yellow-400">Partial</span></div>
-              </div>
+              {(() => {
+                const repos = activeProjects.length;
+                const hasTests = doneTasks > 3;
+                const ghScore = Math.min(Math.round((repos * 15) + (doneTasks * 3) + (stats.streak > 0 ? 10 : 0)), 100);
+                return (
+                  <>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm text-deep-blue-400 flex items-center gap-1.5"><Github className="w-4 h-4" /> GitHub Health</span>
+                      <span className="text-xl font-bold text-green-400">{ghScore}%</span>
+                    </div>
+                    <div className="h-2 bg-deep-blue-800 rounded-full overflow-hidden mb-3">
+                      <motion.div className="h-full bg-green-500 rounded-full" initial={{ width: 0 }} animate={{ width: `${ghScore}%` }} transition={{ duration: 1 }} />
+                    </div>
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex justify-between text-deep-blue-400"><span>Repos</span><span className="text-white">{repos}</span></div>
+                      <div className="flex justify-between text-deep-blue-400"><span>Tasks Done</span><span className="text-white">{doneTasks}</span></div>
+                      <div className="flex justify-between text-deep-blue-400"><span>Activity</span><span className={stats.streak > 0 ? 'text-green-400' : 'text-yellow-400'}>{stats.streak > 0 ? 'Active' : 'Inactive'}</span></div>
+                      <div className="flex justify-between text-deep-blue-400"><span>Tests</span><span className={hasTests ? 'text-green-400' : 'text-yellow-400'}>{hasTests ? 'Good' : 'Needs work'}</span></div>
+                    </div>
+                  </>
+                );
+              })()}
             </motion.div>
 
             {/* LinkedIn Visibility */}
             <motion.div className="card-glass p-5" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm text-deep-blue-400 flex items-center gap-1.5"><Linkedin className="w-4 h-4" /> LinkedIn Visibility</span>
-                <span className="text-xl font-bold text-[#0077B5]">58%</span>
-              </div>
-              <div className="h-2 bg-deep-blue-800 rounded-full overflow-hidden mb-3">
-                <motion.div className="h-full bg-[#0077B5] rounded-full" initial={{ width: 0 }} animate={{ width: '58%' }} transition={{ duration: 1 }} />
-              </div>
-              <div className="space-y-1.5 text-xs">
-                <div className="flex items-center gap-2 text-deep-blue-400"><CheckCircle2 className="w-3 h-3 text-green-400" /> Headline optimized</div>
-                <div className="flex items-center gap-2 text-deep-blue-400"><CheckCircle2 className="w-3 h-3 text-green-400" /> Keywords for backend roles</div>
-                <div className="flex items-center gap-2 text-deep-blue-400"><Clock className="w-3 h-3 text-yellow-400" /> Add project descriptions</div>
-              </div>
+              {(() => {
+                const liTasks = weekTasks.filter(t => t.tags?.some(tag => tag === 'LinkedIn' || tag === 'Career'));
+                const liDone = liTasks.filter(t => t.status === 'done').length;
+                const hasProjects = activeProjects.length > 0;
+                const liScore = Math.min(Math.round(20 + (liDone * 15) + (hasProjects ? 15 : 0) + (overallProgress * 0.3)), 100);
+                return (
+                  <>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm text-deep-blue-400 flex items-center gap-1.5"><Linkedin className="w-4 h-4" /> LinkedIn Visibility</span>
+                      <span className="text-xl font-bold text-[#0077B5]">{liScore}%</span>
+                    </div>
+                    <div className="h-2 bg-deep-blue-800 rounded-full overflow-hidden mb-3">
+                      <motion.div className="h-full bg-[#0077B5] rounded-full" initial={{ width: 0 }} animate={{ width: `${liScore}%` }} transition={{ duration: 1 }} />
+                    </div>
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex items-center gap-2 text-deep-blue-400"><CheckCircle2 className={`w-3 h-3 ${hasProjects ? 'text-green-400' : 'text-yellow-400'}`} /> {hasProjects ? 'Projects added' : 'Add projects to profile'}</div>
+                      <div className="flex items-center gap-2 text-deep-blue-400"><CheckCircle2 className={`w-3 h-3 ${liDone > 0 ? 'text-green-400' : 'text-yellow-400'}`} /> {liDone > 0 ? 'LinkedIn tasks started' : 'Optimize headline'}</div>
+                      <div className="flex items-center gap-2 text-deep-blue-400"><Clock className={`w-3 h-3 ${overallProgress > 30 ? 'text-green-400' : 'text-yellow-400'}`} /> {overallProgress > 30 ? 'Skills demonstrated' : 'Complete more tasks'}</div>
+                    </div>
+                  </>
+                );
+              })()}
             </motion.div>
 
             {/* Streak */}

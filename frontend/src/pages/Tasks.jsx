@@ -1,19 +1,11 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import DashboardLayout from '../components/DashboardLayout';
+import { useRoadmapData } from '../hooks/useRoadmapData';
 import {
-  CheckCircle2, Circle, Clock, Tag, Calendar, ChevronRight,
+  CheckCircle2, Circle, Tag, Calendar, ChevronRight,
   X, FileText, Timer, CheckSquare, Search
 } from 'lucide-react';
-
-const demoTasks = [
-  { id: 1, title: 'Build a CRUD API with FastAPI and PostgreSQL', tags: ['Backend', 'Project', 'GitHub'], due: '2026-02-20', status: 'in-progress', step: 2, description: 'Create a complete REST API using FastAPI with SQLAlchemy ORM and PostgreSQL. Include models for users and items, proper error handling, and Swagger documentation.', checklist: ['Set up FastAPI project', 'Create SQLAlchemy models', 'Implement CRUD endpoints', 'Add authentication', 'Write API documentation'], estimated: '8 hours', notes: '' },
-  { id: 2, title: 'Write unit tests for your main project', tags: ['Testing', 'Backend'], due: '2026-02-22', status: 'todo', step: 2, description: 'Add comprehensive test coverage using pytest. Cover all API endpoints, model validations, and edge cases.', checklist: ['Install pytest & httpx', 'Test GET endpoints', 'Test POST/PUT/DELETE', 'Test error cases', 'Achieve 80%+ coverage'], estimated: '5 hours', notes: '' },
-  { id: 3, title: 'Improve README for fastapi-todo repo', tags: ['GitHub', 'Portfolio'], due: '2026-02-18', status: 'done', step: 2, description: 'Create a professional README with project description, screenshots, installation guide, and API documentation.', checklist: ['Add project overview', 'Add installation steps', 'Include API examples', 'Add screenshots', 'Add badges'], estimated: '2 hours', notes: '' },
-  { id: 4, title: 'Deploy API to Render with CI/CD', tags: ['DevOps', 'Backend'], due: '2026-02-25', status: 'todo', step: 3, description: 'Set up automatic deployment pipeline from GitHub to Render. Configure environment variables and health checks.', checklist: ['Create Render account', 'Configure deployment', 'Set environment variables', 'Add health endpoint', 'Test auto-deploy'], estimated: '3 hours', notes: '' },
-  { id: 5, title: 'Learn Docker basics and containerize your app', tags: ['DevOps', 'Project'], due: '2026-02-28', status: 'todo', step: 3, description: 'Create a Dockerfile for your FastAPI app, learn docker-compose for multi-container setups with PostgreSQL.', checklist: ['Install Docker Desktop', 'Write Dockerfile', 'Create docker-compose.yml', 'Add PostgreSQL container', 'Test locally'], estimated: '6 hours', notes: '' },
-  { id: 6, title: 'Optimize LinkedIn headline for backend roles', tags: ['LinkedIn', 'Career'], due: '2026-02-19', status: 'in-progress', step: 2, description: 'Update your LinkedIn headline with keywords that recruiters search for: Python, FastAPI, PostgreSQL, REST APIs.', checklist: ['Research top headlines', 'Draft 3 options', 'Get feedback', 'Update headline', 'Update summary'], estimated: '1 hour', notes: '' },
-];
 
 const filters = ['All tasks', 'This week', 'This month', 'By step'];
 const statusColors = {
@@ -24,16 +16,12 @@ const statusColors = {
 const statusLabels = { 'done': 'Done', 'in-progress': 'In Progress', 'todo': 'To Do' };
 
 const Tasks = () => {
-  const [tasks, setTasks] = useState(demoTasks);
+  const { allTasks, toggleTaskStatus } = useRoadmapData();
   const [activeFilter, setActiveFilter] = useState('All tasks');
   const [selectedTask, setSelectedTask] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const toggleTask = (id) => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, status: t.status === 'done' ? 'todo' : 'done' } : t));
-  };
-
-  const filtered = tasks.filter(t => {
+  const filtered = allTasks.filter(t => {
     if (searchQuery && !t.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     if (activeFilter === 'This week') return new Date(t.due) <= new Date(Date.now() + 7 * 86400000);
     if (activeFilter === 'This month') return new Date(t.due).getMonth() === new Date().getMonth();
@@ -44,6 +32,9 @@ const Tasks = () => {
     ? Object.entries(filtered.reduce((acc, t) => { (acc[`Step ${t.step}`] = acc[`Step ${t.step}`] || []).push(t); return acc; }, {}))
     : [['', filtered]];
 
+  // Keep selected task in sync after toggle
+  const currentSelected = selectedTask ? allTasks.find(t => t.id === selectedTask.id) || selectedTask : null;
+
   return (
     <DashboardLayout>
       <div className="flex gap-6 min-h-[calc(100vh-5rem)]">
@@ -52,12 +43,15 @@ const Tasks = () => {
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
             <h1 className="text-2xl font-bold text-white mb-1">Tasks</h1>
-            <p className="text-deep-blue-400 text-sm">Manage your roadmap tasks and track progress</p>
+            <p className="text-deep-blue-400 text-sm">
+              Manage your roadmap tasks and track progress ·{' '}
+              <span className="text-neon-purple-400">{allTasks.filter(t => t.status === 'done').length}/{allTasks.length} completed</span>
+            </p>
           </motion.div>
 
           {/* Filters + Search */}
           <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               {filters.map(f => (
                 <button
                   key={f}
@@ -96,10 +90,10 @@ const Tasks = () => {
                       transition={{ delay: i * 0.05 }}
                       onClick={() => setSelectedTask(task)}
                       className={`card-glass p-4 cursor-pointer hover:border-neon-purple-500/50 transition-all flex items-center gap-4 ${
-                        selectedTask?.id === task.id ? 'border-neon-purple-500/50' : ''
+                        currentSelected?.id === task.id ? 'border-neon-purple-500/50' : ''
                       }`}
                     >
-                      <button onClick={e => { e.stopPropagation(); toggleTask(task.id); }}>
+                      <button onClick={e => { e.stopPropagation(); toggleTaskStatus(task.id); }}>
                         {task.status === 'done'
                           ? <CheckCircle2 className="w-5 h-5 text-green-400" />
                           : <Circle className="w-5 h-5 text-deep-blue-600 hover:text-neon-purple-400 transition-colors" />
@@ -118,7 +112,7 @@ const Tasks = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0">
-                        <span className="text-xs text-deep-blue-500 flex items-center gap-1">
+                        <span className="text-xs text-deep-blue-500 flex items-center gap-1 hidden sm:flex">
                           <Calendar className="w-3 h-3" /> {new Date(task.due).toLocaleDateString('en', { month: 'short', day: 'numeric' })}
                         </span>
                         <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[task.status]}`}>
@@ -131,74 +125,81 @@ const Tasks = () => {
                 </div>
               </div>
             ))}
+            {filtered.length === 0 && (
+              <div className="card-glass p-12 text-center">
+                <p className="text-deep-blue-400">No tasks match your filter</p>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Right Drawer — Task Detail */}
         <AnimatePresence>
-          {selectedTask && (
+          {currentSelected && (
             <motion.div
               initial={{ opacity: 0, x: 40 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 40 }}
-              className="w-96 flex-shrink-0"
+              className="w-96 flex-shrink-0 hidden lg:block"
             >
               <div className="card-glass p-6 sticky top-6 space-y-5">
                 <div className="flex items-start justify-between">
-                  <h3 className="text-lg font-bold text-white pr-4">{selectedTask.title}</h3>
+                  <h3 className="text-lg font-bold text-white pr-4">{currentSelected.title}</h3>
                   <button onClick={() => setSelectedTask(null)} className="p-1.5 rounded-lg hover:bg-deep-blue-700 text-deep-blue-400">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
-                <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${statusColors[selectedTask.status]}`}>
-                  {statusLabels[selectedTask.status]}
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${statusColors[currentSelected.status]}`}>
+                  {statusLabels[currentSelected.status]}
                 </span>
 
-                {/* Description */}
                 <div>
                   <h4 className="text-xs font-medium text-deep-blue-400 uppercase tracking-wider mb-2 flex items-center gap-1">
                     <FileText className="w-3 h-3" /> Description
                   </h4>
-                  <p className="text-sm text-deep-blue-200 leading-relaxed">{selectedTask.description}</p>
+                  <p className="text-sm text-deep-blue-200 leading-relaxed">{currentSelected.description}</p>
                 </div>
 
-                {/* Checklist */}
                 <div>
                   <h4 className="text-xs font-medium text-deep-blue-400 uppercase tracking-wider mb-2 flex items-center gap-1">
                     <CheckSquare className="w-3 h-3" /> Checklist
                   </h4>
                   <div className="space-y-2">
-                    {selectedTask.checklist.map((item, i) => (
+                    {currentSelected.checklist.map((item, i) => (
                       <label key={i} className="flex items-center gap-2.5 text-sm text-deep-blue-200 cursor-pointer hover:text-white transition-colors">
-                        <input type="checkbox" className="w-4 h-4 rounded border-deep-blue-600 bg-deep-blue-800 text-neon-purple-500 focus:ring-neon-purple-500" />
+                        <input type="checkbox" defaultChecked={currentSelected.status === 'done'} className="w-4 h-4 rounded border-deep-blue-600 bg-deep-blue-800 text-neon-purple-500 focus:ring-neon-purple-500" />
                         {item}
                       </label>
                     ))}
                   </div>
                 </div>
 
-                {/* Estimated Time */}
                 <div className="flex items-center gap-2 text-sm text-deep-blue-400">
                   <Timer className="w-4 h-4" />
-                  Estimated: <span className="text-white">{selectedTask.estimated}</span>
+                  Estimated: <span className="text-white">{currentSelected.estimated}</span>
                 </div>
 
-                {/* Tags */}
                 <div className="flex flex-wrap gap-2">
-                  {selectedTask.tags.map(tag => (
+                  {currentSelected.tags.map(tag => (
                     <span key={tag} className="px-2.5 py-1 rounded-lg bg-deep-blue-800/50 text-xs text-cyber-blue border border-cyber-blue/20">{tag}</span>
                   ))}
                 </div>
 
-                {/* Notes */}
-                <div>
-                  <h4 className="text-xs font-medium text-deep-blue-400 uppercase tracking-wider mb-2">Notes</h4>
-                  <textarea
-                    placeholder="Add your notes here..."
-                    className="w-full px-3 py-2 rounded-xl bg-deep-blue-900/50 border border-deep-blue-700 text-white placeholder-deep-blue-600 text-sm resize-none focus:outline-none focus:border-neon-purple-500 h-20"
-                  />
+                <div className="text-xs text-deep-blue-500">
+                  Step {currentSelected.step} · Due {new Date(currentSelected.due).toLocaleDateString('en', { month: 'long', day: 'numeric', year: 'numeric' })}
                 </div>
+
+                <button
+                  onClick={() => toggleTaskStatus(currentSelected.id)}
+                  className={`w-full py-2.5 rounded-xl text-sm font-medium transition-all ${
+                    currentSelected.status === 'done'
+                      ? 'bg-deep-blue-800 text-deep-blue-300 hover:bg-deep-blue-700'
+                      : 'btn-primary'
+                  }`}
+                >
+                  {currentSelected.status === 'done' ? 'Mark as To Do' : 'Mark as Done ✓'}
+                </button>
               </div>
             </motion.div>
           )}

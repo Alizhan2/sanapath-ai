@@ -1,69 +1,12 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
+import { useRoadmapData } from '../hooks/useRoadmapData';
 import {
   ChevronRight, BookOpen, Code2, Rocket, Award,
-  Clock, Flame, Target, Zap
+  Clock, Flame, Target, Zap, CheckCircle2
 } from 'lucide-react';
-
-const roadmapSteps = [
-  {
-    id: 1, step: 1,
-    title: 'Foundations: Python & Git',
-    goal: 'Master Python core + Git workflow to confidently contribute to team projects and open source.',
-    skills: ['Python 3.x', 'Git & GitHub', 'CLI basics', 'Virtual environments'],
-    projects: [
-      { name: 'CLI Task Manager', desc: 'Build a command-line todo app with file persistence' },
-      { name: 'GitHub Portfolio Setup', desc: 'Create a professional profile with pinned repos' },
-    ],
-    status: 'completed', progress: 100, duration: '3-4 weeks',
-  },
-  {
-    id: 2, step: 2,
-    title: 'Backend Development with FastAPI',
-    goal: 'Build production-quality REST APIs. Understand databases, auth, testing, and deployment.',
-    skills: ['FastAPI', 'SQLAlchemy', 'PostgreSQL', 'JWT Auth', 'Pytest', 'Docker basics'],
-    projects: [
-      { name: 'CRUD API + PostgreSQL', desc: 'Full REST API with user auth and database' },
-      { name: 'API Testing Suite', desc: 'Write comprehensive tests for all endpoints' },
-      { name: 'README Excellence', desc: 'Create portfolio-worthy documentation' },
-    ],
-    status: 'in-progress', progress: 45, duration: '5-6 weeks',
-  },
-  {
-    id: 3, step: 3,
-    title: 'DevOps & Deployment',
-    goal: 'Deploy your apps professionally. Learn CI/CD, Docker, and cloud basics.',
-    skills: ['Docker', 'CI/CD', 'Render/Railway', 'GitHub Actions', 'Environment management'],
-    projects: [
-      { name: 'Containerize Your API', desc: 'Dockerize FastAPI app with docker-compose' },
-      { name: 'Auto-Deploy Pipeline', desc: 'Set up GitHub Actions for automated testing & deployment' },
-    ],
-    status: 'upcoming', progress: 0, duration: '3-4 weeks',
-  },
-  {
-    id: 4, step: 4,
-    title: 'ML & AI Integration',
-    goal: 'Integrate machine learning into your backend. Build intelligent features.',
-    skills: ['scikit-learn', 'Pandas', 'ML APIs', 'Model serving', 'Data pipelines'],
-    projects: [
-      { name: 'Recommendation Engine', desc: 'Build a simple content recommendation API' },
-      { name: 'AI-Powered Feature', desc: 'Add smart features to your existing project' },
-    ],
-    status: 'locked', progress: 0, duration: '4-5 weeks',
-  },
-  {
-    id: 5, step: 5,
-    title: 'Portfolio & Job Readiness',
-    goal: 'Polish everything. Build a standout portfolio, optimize LinkedIn, and start applying.',
-    skills: ['Portfolio design', 'LinkedIn optimization', 'Interview prep', 'System design basics'],
-    projects: [
-      { name: 'Portfolio Website', desc: 'Showcase your best projects with live demos' },
-      { name: 'Open Source Contribution', desc: 'Make a meaningful PR to a popular project' },
-    ],
-    status: 'locked', progress: 0, duration: '3-4 weeks',
-  },
-];
 
 const statusConfig = {
   'completed': { color: 'text-green-400', bg: 'bg-green-500/15 border-green-500/30', icon: Award, label: 'Completed' },
@@ -73,8 +16,11 @@ const statusConfig = {
 };
 
 const RoadmapDetail = () => {
-  const [expandedStep, setExpandedStep] = useState(2);
-  const totalProgress = Math.round(roadmapSteps.reduce((sum, s) => sum + s.progress, 0) / roadmapSteps.length);
+  const { steps, overallProgress, doneTasks, totalTasks, toggleTaskStatus } = useRoadmapData();
+  const [expandedStep, setExpandedStep] = useState(() => {
+    const active = steps.find(s => s._status === 'in-progress');
+    return active?.id || 2;
+  });
 
   return (
     <DashboardLayout>
@@ -92,11 +38,13 @@ const RoadmapDetail = () => {
             <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-deep-blue-800" />
 
             <div className="space-y-4">
-              {roadmapSteps.map((step, i) => {
-                const cfg = statusConfig[step.status];
+              {steps.map((step, i) => {
+                const cfg = statusConfig[step._status];
                 const Icon = cfg.icon;
                 const isExpanded = expandedStep === step.id;
-                const isActive = step.status === 'in-progress';
+                const isActive = step._status === 'in-progress';
+                const stepTasks = step.tasks || [];
+                const stepDone = stepTasks.filter(t => t.status === 'done').length;
 
                 return (
                   <motion.div
@@ -109,7 +57,7 @@ const RoadmapDetail = () => {
                     {/* Step indicator on timeline */}
                     <div className={`absolute left-3.5 w-5 h-5 rounded-full flex items-center justify-center z-10 ${
                       isActive ? 'bg-neon-purple-500 shadow-lg shadow-neon-purple-500/30' :
-                      step.status === 'completed' ? 'bg-green-500' : 'bg-deep-blue-700'
+                      step._status === 'completed' ? 'bg-green-500' : 'bg-deep-blue-700'
                     }`}>
                       <span className="text-[10px] font-bold text-white">{step.step}</span>
                     </div>
@@ -118,7 +66,7 @@ const RoadmapDetail = () => {
                     <div
                       className={`ml-14 card-glass p-5 cursor-pointer transition-all ${
                         isActive ? 'border-neon-purple-500/40 shadow-lg shadow-neon-purple-500/5' :
-                        step.status === 'completed' ? 'border-green-500/20' :
+                        step._status === 'completed' ? 'border-green-500/20' :
                         'hover:border-deep-blue-600'
                       }`}
                       onClick={() => setExpandedStep(isExpanded ? null : step.id)}
@@ -131,22 +79,25 @@ const RoadmapDetail = () => {
                               {cfg.label}
                             </span>
                             <span className="text-xs text-deep-blue-500">{step.duration}</span>
+                            {stepTasks.length > 0 && (
+                              <span className="text-xs text-deep-blue-500">{stepDone}/{stepTasks.length} tasks</span>
+                            )}
                           </div>
-                          <h3 className={`text-lg font-semibold ${step.status === 'locked' ? 'text-deep-blue-500' : 'text-white'}`}>
+                          <h3 className={`text-lg font-semibold ${step._status === 'locked' ? 'text-deep-blue-500' : 'text-white'}`}>
                             {step.title}
                           </h3>
                         </div>
-                        {step.progress > 0 && (
+                        {step._progress > 0 && (
                           <div className="flex items-center gap-2">
                             <div className="w-16 h-1.5 rounded-full bg-deep-blue-800 overflow-hidden">
                               <motion.div
                                 initial={{ width: 0 }}
-                                animate={{ width: `${step.progress}%` }}
+                                animate={{ width: `${step._progress}%` }}
                                 transition={{ duration: 1, delay: 0.5 }}
-                                className={`h-full rounded-full ${step.status === 'completed' ? 'bg-green-400' : 'bg-neon-purple-400'}`}
+                                className={`h-full rounded-full ${step._status === 'completed' ? 'bg-green-400' : 'bg-neon-purple-400'}`}
                               />
                             </div>
-                            <span className="text-xs text-deep-blue-400">{step.progress}%</span>
+                            <span className="text-xs text-deep-blue-400">{step._progress}%</span>
                           </div>
                         )}
                         <ChevronRight className={`w-5 h-5 text-deep-blue-500 ml-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
@@ -175,6 +126,39 @@ const RoadmapDetail = () => {
                             </div>
                           </div>
 
+                          {/* Tasks (real data!) */}
+                          {stepTasks.length > 0 && (
+                            <div>
+                              <h4 className="text-xs font-medium text-deep-blue-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3" /> Tasks ({stepDone}/{stepTasks.length} done)
+                              </h4>
+                              <div className="space-y-1.5">
+                                {stepTasks.map(task => (
+                                  <div
+                                    key={task.id}
+                                    className="flex items-center gap-3 p-2 rounded-lg bg-deep-blue-900/30 cursor-pointer hover:bg-deep-blue-800/50 transition-colors"
+                                    onClick={e => { e.stopPropagation(); toggleTaskStatus(task.id); }}
+                                  >
+                                    {task.status === 'done'
+                                      ? <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0" />
+                                      : <div className="w-4 h-4 rounded border-2 border-deep-blue-600 flex-shrink-0" />
+                                    }
+                                    <span className={`text-sm flex-1 ${task.status === 'done' ? 'text-deep-blue-500 line-through' : 'text-white'}`}>
+                                      {task.title}
+                                    </span>
+                                    <span className={`px-2 py-0.5 rounded-full text-[10px] ${
+                                      task.status === 'done' ? 'bg-green-500/20 text-green-400' :
+                                      task.status === 'in-progress' ? 'bg-yellow-500/20 text-yellow-400' :
+                                      'bg-deep-blue-700 text-deep-blue-400'
+                                    }`}>
+                                      {task.status === 'done' ? 'Done' : task.status === 'in-progress' ? 'In Progress' : 'To Do'}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
                           {/* Mini-projects */}
                           <div>
                             <h4 className="text-xs font-medium text-deep-blue-400 uppercase tracking-wider mb-2 flex items-center gap-1">
@@ -193,10 +177,10 @@ const RoadmapDetail = () => {
                             </div>
                           </div>
 
-                          {(step.status === 'in-progress' || step.status === 'upcoming') && (
-                            <button className="btn-primary w-full text-sm !py-2.5 flex items-center justify-center gap-2">
+                          {(step._status === 'in-progress' || step._status === 'upcoming') && (
+                            <Link to="/tasks" className="btn-primary w-full text-sm !py-2.5 flex items-center justify-center gap-2">
                               <BookOpen className="w-4 h-4" /> View Tasks
-                            </button>
+                            </Link>
                           )}
                         </motion.div>
                       )}
@@ -209,7 +193,7 @@ const RoadmapDetail = () => {
         </div>
 
         {/* Right Summary */}
-        <div className="w-72 flex-shrink-0 space-y-4">
+        <div className="w-72 flex-shrink-0 hidden lg:block space-y-4">
           {/* Overall Progress */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card-glass p-5 sticky top-6">
             <h3 className="text-sm font-semibold text-white mb-4">Roadmap Overview</h3>
@@ -220,7 +204,7 @@ const RoadmapDetail = () => {
                   cx="50" cy="50" r="42" fill="none" stroke="url(#roadmap-grad)" strokeWidth="8"
                   strokeLinecap="round" strokeDasharray={264}
                   initial={{ strokeDashoffset: 264 }}
-                  animate={{ strokeDashoffset: 264 - (264 * totalProgress / 100) }}
+                  animate={{ strokeDashoffset: 264 - (264 * overallProgress / 100) }}
                   transition={{ duration: 1.5 }}
                   transform="rotate(-90 50 50)"
                 />
@@ -230,36 +214,40 @@ const RoadmapDetail = () => {
                     <stop offset="100%" stopColor="#06b6d4" />
                   </linearGradient>
                 </defs>
-                <text x="50" y="50" textAnchor="middle" dominantBaseline="central" className="text-xl font-bold fill-white">{totalProgress}%</text>
+                <text x="50" y="50" textAnchor="middle" dominantBaseline="central" className="text-xl font-bold fill-white">{overallProgress}%</text>
               </svg>
             </div>
 
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-deep-blue-400">Estimated Duration</span>
-                <span className="text-white font-medium">18-23 weeks</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-deep-blue-400">Hours / week</span>
-                <span className="text-white font-medium">10-15 hrs</span>
+                <span className="text-deep-blue-400">Tasks Done</span>
+                <span className="text-white font-medium">{doneTasks} / {totalTasks}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-deep-blue-400">Steps Completed</span>
-                <span className="text-white font-medium">{roadmapSteps.filter(s => s.status === 'completed').length} / {roadmapSteps.length}</span>
+                <span className="text-white font-medium">{steps.filter(s => s._status === 'completed').length} / {steps.length}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-deep-blue-400">Current Step</span>
-                <span className="text-neon-purple-400 font-medium">{roadmapSteps.find(s => s.status === 'in-progress')?.title?.split(':')[0] || 'N/A'}</span>
+                <span className="text-neon-purple-400 font-medium">{steps.find(s => s._status === 'in-progress')?.title?.split(':')[0] || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-deep-blue-400">Est. Duration</span>
+                <span className="text-white font-medium">18-23 weeks</span>
               </div>
             </div>
           </motion.div>
 
-          {/* Quick Tips */}
+          {/* AI Tip */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card-glass p-5">
             <h3 className="text-sm font-semibold text-white mb-3">💡 AI Tip</h3>
             <p className="text-xs text-deep-blue-300 leading-relaxed">
-              You're 45% through Step 2! Focus on completing the CRUD API this week. 
-              Push it to GitHub to boost your profile score by ~15%.
+              {overallProgress < 30
+                ? "Focus on completing your current step tasks. Every task you finish brings you closer to your goal!"
+                : overallProgress < 60
+                  ? `You're ${overallProgress}% through your roadmap! Keep the momentum going.`
+                  : "Amazing progress! You're on track to complete your roadmap soon. 🚀"
+              }
             </p>
           </motion.div>
         </div>
