@@ -8,7 +8,7 @@ import { ProgressRing, WeeklyProgressChart, StreakCounter, SkillBars, AnimatedCo
 import { AchievementCard, achievements as allAchievements } from '../components/Achievements';
 import {
   User, Rocket, Target, Calendar, CheckCircle2, Clock,
-  Plus, Award, ChevronRight, Sparkles, Brain,
+  Plus, Award, ChevronRight, Sparkles, Brain, Zap,
   Flame, Star, BarChart3, Github, Linkedin, Map,
   ArrowRight
 } from 'lucide-react';
@@ -260,7 +260,7 @@ const Dashboard = () => {
               <div className="text-sm text-deep-blue-400 mb-2 flex items-center gap-1.5"><Flame className="w-4 h-4 text-orange-400" /> Streak</div>
               <div className="flex items-end gap-2 mb-2">
                 <span className="text-4xl font-bold text-orange-400">{stats.streak}</span>
-                <span className="text-deep-blue-400 text-sm pb-1">weeks in a row</span>
+                <span className="text-deep-blue-400 text-sm pb-1">days in a row</span>
               </div>
               <div className="flex gap-1">
                 {[1,2,3,4,5,6,7].map(w => (

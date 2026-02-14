@@ -16,7 +16,8 @@ import {
   ChevronRight,
   BrainCircuit,
   Flame,
-  LogOut
+  User,
+  Trophy
 } from 'lucide-react';
 
 const sidebarLinks = [
@@ -36,8 +37,13 @@ const AppSidebar = ({ collapsed, setCollapsed }) => {
   const { stats } = useRealStats();
 
   return (
+    <>
+    {/* Mobile overlay */}
+    {!collapsed && (
+      <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={() => setCollapsed(true)} />
+    )}
     <motion.aside
-      className="fixed left-0 top-0 bottom-0 z-40 flex flex-col bg-deep-blue-950/95 backdrop-blur-xl border-r border-deep-blue-800/50"
+      className={`fixed left-0 top-0 bottom-0 z-40 flex flex-col bg-deep-blue-950/95 backdrop-blur-xl border-r border-deep-blue-800/50 ${collapsed ? '-translate-x-full md:translate-x-0' : 'translate-x-0'} md:translate-x-0 transition-transform`}
       animate={{ width: collapsed ? 72 : 256 }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
     >
@@ -190,6 +196,7 @@ const AppSidebar = ({ collapsed, setCollapsed }) => {
         </button>
       </div>
     </motion.aside>
+    </>
   );
 };
 

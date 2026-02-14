@@ -219,13 +219,13 @@ const Contact = () => {
                 <div className="mt-6 pt-4 border-t border-deep-blue-700/50">
                   <p className="text-xs text-deep-blue-500 mb-3">Follow us</p>
                   <div className="flex gap-3">
-                    <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="p-2.5 rounded-lg bg-deep-blue-800/50 text-deep-blue-400 hover:text-white hover:bg-deep-blue-700 transition-all">
+                    <a href="https://github.com/Alizhan2" target="_blank" rel="noopener noreferrer" className="p-2.5 rounded-lg bg-deep-blue-800/50 text-deep-blue-400 hover:text-white hover:bg-deep-blue-700 transition-all">
                       <Github className="w-5 h-5" />
                     </a>
-                    <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="p-2.5 rounded-lg bg-deep-blue-800/50 text-deep-blue-400 hover:text-white hover:bg-deep-blue-700 transition-all">
+                    <a href="https://linkedin.com/company/sanapath-ai" target="_blank" rel="noopener noreferrer" className="p-2.5 rounded-lg bg-deep-blue-800/50 text-deep-blue-400 hover:text-white hover:bg-deep-blue-700 transition-all">
                       <Linkedin className="w-5 h-5" />
                     </a>
-                    <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="p-2.5 rounded-lg bg-deep-blue-800/50 text-deep-blue-400 hover:text-white hover:bg-deep-blue-700 transition-all">
+                    <a href="https://twitter.com/sanapath_ai" target="_blank" rel="noopener noreferrer" className="p-2.5 rounded-lg bg-deep-blue-800/50 text-deep-blue-400 hover:text-white hover:bg-deep-blue-700 transition-all">
                       <Twitter className="w-5 h-5" />
                     </a>
                   </div>

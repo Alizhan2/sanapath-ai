@@ -29,6 +29,8 @@ import SkillsMap from './pages/SkillsMap';
 import Portfolio from './pages/Portfolio';
 import Goals from './pages/Goals';
 import WeeklyCheckin from './pages/WeeklyCheckin';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
 
 
 function App() {
@@ -147,6 +149,10 @@ function App() {
 
               {/* Contact */}
               <Route path="/contact" element={<Contact />} />
+
+              {/* Legal */}
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
 
               {/* 404 Not Found */}
               <Route path="*" element={<NotFound />} />

@@ -6,14 +6,18 @@ import { BrainCircuit, Github, Twitter, Linkedin, Heart, Send, ArrowRight, Mail,
 const Footer = () => {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [emailError, setEmailError] = useState('');
+
+  const validateEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
   const handleSubscribe = (e) => {
     e.preventDefault();
-    if (email) {
-      setSubscribed(true);
-      setTimeout(() => setSubscribed(false), 3000);
-      setEmail('');
-    }
+    setEmailError('');
+    if (!email) { setEmailError('Please enter your email'); return; }
+    if (!validateEmail(email)) { setEmailError('Please enter a valid email'); return; }
+    setSubscribed(true);
+    setTimeout(() => setSubscribed(false), 4000);
+    setEmail('');
   };
 
   const footerLinks = {
@@ -36,9 +40,9 @@ const Footer = () => {
       { name: 'Contact', href: '/contact' },
     ],
     Legal: [
-      { name: 'Privacy Policy', href: '#' },
-      { name: 'Terms of Service', href: '#' },
-      { name: 'Cookie Policy', href: '#' },
+      { name: 'Privacy Policy', href: '/privacy' },
+      { name: 'Terms of Service', href: '/terms' },
+      { name: 'Cookie Policy', href: '/privacy' },
     ],
   };
 
@@ -86,9 +90,8 @@ const Footer = () => {
                     </>
                   )}
                 </motion.button>
-              </form>
-              <p className="text-xs text-deep-blue-500 mt-2">
-                No spam, unsubscribe anytime. Read our <Link to="#" className="text-neon-purple-400 hover:underline">Privacy Policy</Link>
+              </form>              {emailError && <p className="text-xs text-red-400 mt-2">{emailError}</p>}              <p className="text-xs text-deep-blue-500 mt-2">
+                No spam, unsubscribe anytime. Read our <Link to="/privacy" className="text-neon-purple-400 hover:underline">Privacy Policy</Link>
               </p>
             </div>
           </div>
@@ -127,13 +130,13 @@ const Footer = () => {
 
             {/* Social Links */}
             <div className="flex items-center gap-4">
-              <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-deep-blue-800/50 text-deep-blue-400 hover:text-white hover:bg-deep-blue-700 transition-all">
+              <a href="https://github.com/Alizhan2" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-deep-blue-800/50 text-deep-blue-400 hover:text-white hover:bg-deep-blue-700 transition-all">
                 <Github className="w-5 h-5" />
               </a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-deep-blue-800/50 text-deep-blue-400 hover:text-white hover:bg-deep-blue-700 transition-all">
+              <a href="https://twitter.com/sanapath_ai" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-deep-blue-800/50 text-deep-blue-400 hover:text-white hover:bg-deep-blue-700 transition-all">
                 <Twitter className="w-5 h-5" />
               </a>
-              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-deep-blue-800/50 text-deep-blue-400 hover:text-white hover:bg-deep-blue-700 transition-all">
+              <a href="https://linkedin.com/company/sanapath-ai" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-deep-blue-800/50 text-deep-blue-400 hover:text-white hover:bg-deep-blue-700 transition-all">
                 <Linkedin className="w-5 h-5" />
               </a>
             </div>
@@ -167,12 +170,12 @@ const Footer = () => {
               © 2026 SanaPath AI. All rights reserved.
             </p>
             <div className="flex items-center gap-6">
-              <Link to="#" className="text-deep-blue-400 hover:text-white text-sm transition-colors">
+              <a href="https://github.com/Alizhan2/sanapath-ai" target="_blank" rel="noopener noreferrer" className="text-deep-blue-400 hover:text-white text-sm transition-colors">
                 Status
-              </Link>
-              <Link to="#" className="text-deep-blue-400 hover:text-white text-sm transition-colors">
+              </a>
+              <a href="https://github.com/Alizhan2/sanapath-ai/commits/main" target="_blank" rel="noopener noreferrer" className="text-deep-blue-400 hover:text-white text-sm transition-colors">
                 Changelog
-              </Link>
+              </a>
               <p className="text-deep-blue-400 text-sm flex items-center gap-1">
                 Made with <Heart className="w-4 h-4 text-cyber-pink animate-pulse" /> for the AI-Sana community
               </p>

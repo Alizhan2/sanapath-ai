@@ -223,7 +223,7 @@ const Landing = () => {
       </section>
 
       {/* ═══════════════════ BENEFITS ═══════════════════ */}
-      <section className="py-24 px-4 relative">
+      <section id="features" className="py-24 px-4 relative">
         <div className="max-w-6xl mx-auto">
           <motion.div className="text-center mb-16" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <h2 className="text-4xl md:text-5xl font-bold mb-4">Why <span className="gradient-text">SanaPath</span>?</h2>
