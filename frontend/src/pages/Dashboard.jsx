@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useRealStats } from '../hooks/useRealStats';
 import { useRoadmapData } from '../hooks/useRoadmapData';
+import { computeSkillCategories, getTopSkillsFlat } from '../hooks/useSkillsData';
 import DashboardLayout from '../components/DashboardLayout';
 import { ProgressRing, WeeklyProgressChart, StreakCounter, SkillBars, AnimatedCounter } from '../components/ProgressWidgets';
 import { AchievementCard, achievements as allAchievements } from '../components/Achievements';
@@ -383,7 +384,11 @@ const Dashboard = () => {
             <div className="space-y-6">
               <motion.div className="card-glass p-6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }}>
                 <h3 className="text-sm font-medium text-deep-blue-400 mb-4 flex items-center gap-2"><Zap className="w-4 h-4 text-cyber-blue" /> Your Skills</h3>
-                <SkillBars skills={skills.length > 0 ? skills : [{ name: 'Start a project first', color: '#8B5CF6', colorEnd: '#7C3AED', level: 0 }]} />
+                {(() => {
+                  const categories = computeSkillCategories(skills, steps);
+                  const topSkills = getTopSkillsFlat(categories);
+                  return <SkillBars skills={topSkills.length > 0 && topSkills.some(s => s.level > 0) ? topSkills : [{ name: 'Complete tasks to build skills', color: '#8B5CF6', colorEnd: '#7C3AED', level: 0 }]} />;
+                })()}
                 <Link to="/skills" className="mt-4 block text-sm text-neon-purple-400 hover:text-neon-purple-300 flex items-center gap-1">
                   Full skills map <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
