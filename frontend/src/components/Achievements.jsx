@@ -96,7 +96,43 @@ const achievementsList = [
     points: 400,
     color: 'from-pink-500 to-rose-500',
     unlockCondition: (stats) => stats.resourcesUsed >= 20
-  }
+  },
+  {
+    id: 'streak_30',
+    icon: Flame,
+    title: 'Unstoppable',
+    description: 'Maintain a 30-day streak',
+    points: 1500,
+    color: 'from-red-500 to-orange-600',
+    unlockCondition: (stats) => stats.streak >= 30
+  },
+  {
+    id: 'five_projects',
+    icon: Rocket,
+    title: 'Portfolio Builder',
+    description: 'Start 5 different projects',
+    points: 500,
+    color: 'from-violet-500 to-fuchsia-500',
+    unlockCondition: (stats) => stats.totalProjects >= 5
+  },
+  {
+    id: 'roadmap_half',
+    icon: Target,
+    title: 'Halfway Hero',
+    description: 'Complete 50% of your roadmap',
+    points: 600,
+    color: 'from-teal-500 to-emerald-500',
+    unlockCondition: (stats) => stats.roadmapProgress >= 50
+  },
+  {
+    id: 'roadmap_complete',
+    icon: Crown,
+    title: 'Roadmap Master',
+    description: 'Complete your entire roadmap',
+    points: 2000,
+    color: 'from-amber-400 to-yellow-500',
+    unlockCondition: (stats) => stats.roadmapProgress >= 100
+  },
 ];
 
 const AchievementCard = ({ achievement, isUnlocked, progress }) => {
@@ -187,6 +223,7 @@ const Achievements = ({ stats = {} }) => {
     streak: 0,
     joinedCommunity: false,
     resourcesUsed: 0,
+    roadmapProgress: 0,
     ...stats
   };
 
@@ -200,12 +237,20 @@ const Achievements = ({ stats = {} }) => {
       case 'first_project':
       case 'three_projects':
         return (defaultStats.totalProjects / (achievement.id === 'first_project' ? 1 : 3)) * 100;
+      case 'five_projects':
+        return (defaultStats.totalProjects / 5) * 100;
       case 'ten_tasks':
         return (defaultStats.completedTasks / 10) * 100;
       case 'code_master':
         return (defaultStats.completedTasks / 50) * 100;
       case 'streak_7':
         return (defaultStats.streak / 7) * 100;
+      case 'streak_30':
+        return (defaultStats.streak / 30) * 100;
+      case 'roadmap_half':
+        return ((defaultStats.roadmapProgress || 0) / 50) * 100;
+      case 'roadmap_complete':
+        return (defaultStats.roadmapProgress || 0);
       default:
         return 0;
     }

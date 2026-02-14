@@ -242,11 +242,17 @@ const RoadmapDetail = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card-glass p-5">
             <h3 className="text-sm font-semibold text-white mb-3">💡 AI Tip</h3>
             <p className="text-xs text-deep-blue-300 leading-relaxed">
-              {overallProgress < 30
-                ? "Focus on completing your current step tasks. Every task you finish brings you closer to your goal!"
-                : overallProgress < 60
-                  ? `You're ${overallProgress}% through your roadmap! Keep the momentum going.`
-                  : "Amazing progress! You're on track to complete your roadmap soon. 🚀"
+              {doneTasks === 0
+                ? "Pick your first task and mark it done! Getting started is the hardest part. 🏁"
+                : overallProgress < 25
+                  ? `${doneTasks} of ${totalTasks} tasks done — great start! Try to finish at least one task every day.`
+                  : overallProgress < 50
+                    ? `${overallProgress}% complete! You're building real momentum. Don't break your streak. 🔥`
+                    : overallProgress < 75
+                      ? "Over halfway! Start thinking about how to showcase these skills in your portfolio."
+                      : overallProgress < 100
+                        ? `Only ${totalTasks - doneTasks} tasks left! You're almost ready for job applications. 💼`
+                        : "All tasks complete! 🎉 Time to polish your portfolio and start applying."
               }
             </p>
           </motion.div>

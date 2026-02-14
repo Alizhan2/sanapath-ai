@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useRealStats } from '../hooks/useRealStats';
 import { useRoadmapData } from '../hooks/useRoadmapData';
 import { computeSkillCategories, getTopSkillsFlat } from '../hooks/useSkillsData';
+import { useToast } from '../components/Toast';
 import DashboardLayout from '../components/DashboardLayout';
 import { ProgressRing, WeeklyProgressChart, StreakCounter, SkillBars, AnimatedCounter } from '../components/ProgressWidgets';
 import { AchievementCard, achievements as allAchievements } from '../components/Achievements';
@@ -22,10 +23,20 @@ const Dashboard = () => {
   const [showAchievements, setShowAchievements] = useState(false);
   const { stats, skills, weeklyActivity, unlockedAchievementIds, recalculate } = useRealStats();
   const { steps, weekTasks, overallProgress, currentStep, doneTasks, totalTasks, toggleTaskStatus } = useRoadmapData();
+  const toast = useToast();
 
   // Simulated connected state — in real app would come from user profile
   const [githubConnected, setGithubConnected] = useState(false);
   const [linkedinConnected, setLinkedinConnected] = useState(false);
+
+  // Toast on task completion
+  useEffect(() => {
+    const handleTaskDone = (e) => {
+      toast.success(`✅ Task completed: ${e.detail.title} (+25 XP)`);
+    };
+    window.addEventListener('taskCompleted', handleTaskDone);
+    return () => window.removeEventListener('taskCompleted', handleTaskDone);
+  }, [toast]);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) { navigate('/login'); return; }
@@ -37,6 +48,15 @@ const Dashboard = () => {
   }, [isAuthenticated, loading, navigate, recalculate]);
 
   const hasData = githubConnected && linkedinConnected;
+
+  // Memoize expensive skill computation
+  const dashboardSkills = useMemo(() => {
+    const categories = computeSkillCategories(skills, steps);
+    const topSkills = getTopSkillsFlat(categories);
+    return topSkills.length > 0 && topSkills.some(s => s.level > 0)
+      ? topSkills
+      : [{ name: 'Complete tasks to build skills', color: '#8B5CF6', colorEnd: '#7C3AED', level: 0 }];
+  }, [skills, steps]);
 
   if (loading) {
     return (
@@ -203,7 +223,10 @@ const Dashboard = () => {
             <motion.div className="card-glass p-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
               <h3 className="text-sm font-medium text-deep-blue-400 mb-4 flex items-center gap-2"><Rocket className="w-4 h-4 text-orange-400" /> Milestones</h3>
               <div className="space-y-3">
-                {steps.slice(0, 5).map((s) => (
+                {steps.slice(0, 5).map((s) => {
+                  const stepTaskCount = (s.tasks || []).length;
+                  const stepDoneCount = (s.tasks || []).filter(t => t.status === 'done').length;
+                  return (
                   <div key={s.step} className={`flex items-center gap-3 p-2.5 rounded-lg ${
                     s._status === 'in-progress' ? 'bg-neon-purple-500/10 border border-neon-purple-500/30' : 'bg-deep-blue-800/30'
                   }`}>
@@ -215,15 +238,28 @@ const Dashboard = () => {
                       {s._status === 'completed' ? <CheckCircle2 className="w-4 h-4" /> : s.step}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className={`text-sm ${s._status === 'locked' ? 'text-deep-blue-500' : 'text-white'}`}>{s.title.split(':')[0]}</span>
+                      <div className="flex items-center justify-between">
+                        <span className={`text-sm ${s._status === 'locked' ? 'text-deep-blue-500' : 'text-white'}`}>{s.title.split(':')[0]}</span>
+                        {stepTaskCount > 0 && (
+                          <span className="text-[10px] text-deep-blue-500 ml-2 flex-shrink-0">
+                            {stepDoneCount}/{stepTaskCount}
+                          </span>
+                        )}
+                      </div>
                       {s._progress > 0 && s._status !== 'completed' && (
                         <div className="w-full h-1 rounded-full bg-deep-blue-800 mt-1 overflow-hidden">
                           <div className="h-full bg-neon-purple-400 rounded-full" style={{ width: `${s._progress}%` }} />
                         </div>
                       )}
+                      {s._status === 'completed' && (
+                        <div className="w-full h-1 rounded-full bg-green-500/30 mt-1 overflow-hidden">
+                          <div className="h-full bg-green-500 rounded-full w-full" />
+                        </div>
+                      )}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </motion.div>
           </div>
@@ -384,11 +420,7 @@ const Dashboard = () => {
             <div className="space-y-6">
               <motion.div className="card-glass p-6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }}>
                 <h3 className="text-sm font-medium text-deep-blue-400 mb-4 flex items-center gap-2"><Zap className="w-4 h-4 text-cyber-blue" /> Your Skills</h3>
-                {(() => {
-                  const categories = computeSkillCategories(skills, steps);
-                  const topSkills = getTopSkillsFlat(categories);
-                  return <SkillBars skills={topSkills.length > 0 && topSkills.some(s => s.level > 0) ? topSkills : [{ name: 'Complete tasks to build skills', color: '#8B5CF6', colorEnd: '#7C3AED', level: 0 }]} />;
-                })()}
+                <SkillBars skills={dashboardSkills} />
                 <Link to="/skills" className="mt-4 block text-sm text-neon-purple-400 hover:text-neon-purple-300 flex items-center gap-1">
                   Full skills map <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
@@ -417,10 +449,20 @@ const Dashboard = () => {
                 </div>
               </motion.div>
 
-              {/* Motivational Text */}
+              {/* AI Insight */}
               <div className="card-glass p-4 bg-gradient-to-r from-neon-purple-500/10 to-cyber-blue/10">
-                <p className="text-sm text-deep-blue-200 text-center italic">
-                  "You're 1 step closer to your first junior role" 🚀
+                <p className="text-xs font-medium text-neon-purple-400 mb-1">💡 AI Tip</p>
+                <p className="text-sm text-deep-blue-200 leading-relaxed">
+                  {overallProgress === 0
+                    ? "Start by completing your first task. Small wins build big momentum! 🏁"
+                    : overallProgress < 30
+                      ? `You've completed ${doneTasks} of ${totalTasks} tasks — great start! Focus on finishing the current step.`
+                      : overallProgress < 60
+                        ? `${overallProgress}% done! You're building real skills. Keep the streak alive! 🔥`
+                        : overallProgress < 90
+                          ? "You're in the home stretch! Consider starting your portfolio project now. 💼"
+                          : "Almost there! Review everything and polish your portfolio for job applications. 🚀"
+                  }
                 </p>
               </div>
             </div>

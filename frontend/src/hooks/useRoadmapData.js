@@ -183,7 +183,11 @@ export const useRoadmapData = () => {
         if (t.id !== taskId) return t;
         const newStatus = t.status === 'done' ? 'todo' : 'done';
         // Record activity when marking done
-        if (newStatus === 'done') recordActivity(1);
+        if (newStatus === 'done') {
+          recordActivity(1);
+          // Emit event for toast notifications
+          window.dispatchEvent(new CustomEvent('taskCompleted', { detail: { title: t.title } }));
+        }
         return { ...t, status: newStatus };
       }),
     }));
@@ -196,7 +200,10 @@ export const useRoadmapData = () => {
       ...step,
       tasks: (step.tasks || []).map(t => {
         if (t.id !== taskId) return t;
-        if (newStatus === 'done' && t.status !== 'done') recordActivity(1);
+        if (newStatus === 'done' && t.status !== 'done') {
+          recordActivity(1);
+          window.dispatchEvent(new CustomEvent('taskCompleted', { detail: { title: t.title } }));
+        }
         return { ...t, status: newStatus };
       }),
     }));

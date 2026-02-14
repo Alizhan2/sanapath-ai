@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import { motion } from 'framer-motion';
 
 // Animated Counter component
@@ -58,7 +58,7 @@ export const AnimatedCounter = ({ value, duration = 2, className = '' }) => {
 };
 
 // Progress Ring component
-export const ProgressRing = ({ progress, size = 120, strokeWidth = 8, children }) => {
+export const ProgressRing = memo(({ progress, size = 120, strokeWidth = 8, children }) => {
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (progress / 100) * circumference;
@@ -102,10 +102,10 @@ export const ProgressRing = ({ progress, size = 120, strokeWidth = 8, children }
       </div>
     </div>
   );
-};
+});
 
 // Weekly Progress Chart
-export const WeeklyProgressChart = ({ data }) => {
+export const WeeklyProgressChart = memo(({ data }) => {
   const maxValue = Math.max(...data.map(d => d.value), 1);
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -135,7 +135,7 @@ export const WeeklyProgressChart = ({ data }) => {
       })}
     </div>
   );
-};
+});
 
 // Streak Counter
 export const StreakCounter = ({ streak, maxStreak = 30 }) => {
@@ -189,7 +189,7 @@ export const StreakCounter = ({ streak, maxStreak = 30 }) => {
 };
 
 // Skill Radar Chart (simplified version)
-export const SkillBars = ({ skills }) => {
+export const SkillBars = memo(({ skills }) => {
   return (
     <div className="space-y-3">
       {skills.map((skill, index) => (
@@ -213,7 +213,7 @@ export const SkillBars = ({ skills }) => {
       ))}
     </div>
   );
-};
+});
 
 // Activity Heatmap
 export const ActivityHeatmap = ({ data, weeks = 12 }) => {

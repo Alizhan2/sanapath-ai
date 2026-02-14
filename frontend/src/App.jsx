@@ -1,36 +1,38 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ProtectedRoute, PublicOnlyRoute } from './components/ProtectedRoute';
 import { ToastProvider } from './components/Toast';
 import AIAssistant from './components/AIAssistant';
 import OnboardingTour from './components/OnboardingTour';
+import ErrorBoundary from './components/ErrorBoundary';
+import PageSkeleton from './components/PageSkeleton';
 
-// Pages
-import Landing from './pages/Landing';
-import Login from './pages/Login';
-import AuthCallback from './pages/AuthCallback';
-import Survey from './pages/Survey';
-import Recommendations from './pages/Recommendations';
-import Community from './pages/Community';
-import Dashboard from './pages/Dashboard';
-import ProjectDetail from './pages/ProjectDetail';
-import Profile from './pages/Profile';
-import Settings from './pages/Settings';
-import Leaderboard from './pages/Leaderboard';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import NotFound from './pages/NotFound';
-import AISession from './pages/AISession';
-import Tasks from './pages/Tasks';
-import RoadmapDetail from './pages/RoadmapDetail';
-import SkillsMap from './pages/SkillsMap';
-import Portfolio from './pages/Portfolio';
-import Goals from './pages/Goals';
-import WeeklyCheckin from './pages/WeeklyCheckin';
-import Privacy from './pages/Privacy';
-import Terms from './pages/Terms';
+// Lazy-loaded pages — code-split for faster initial load
+const Landing = lazy(() => import('./pages/Landing'));
+const Login = lazy(() => import('./pages/Login'));
+const AuthCallback = lazy(() => import('./pages/AuthCallback'));
+const Survey = lazy(() => import('./pages/Survey'));
+const Recommendations = lazy(() => import('./pages/Recommendations'));
+const Community = lazy(() => import('./pages/Community'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const ProjectDetail = lazy(() => import('./pages/ProjectDetail'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Settings = lazy(() => import('./pages/Settings'));
+const Leaderboard = lazy(() => import('./pages/Leaderboard'));
+const About = lazy(() => import('./pages/About'));
+const Contact = lazy(() => import('./pages/Contact'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+const AISession = lazy(() => import('./pages/AISession'));
+const Tasks = lazy(() => import('./pages/Tasks'));
+const RoadmapDetail = lazy(() => import('./pages/RoadmapDetail'));
+const SkillsMap = lazy(() => import('./pages/SkillsMap'));
+const Portfolio = lazy(() => import('./pages/Portfolio'));
+const Goals = lazy(() => import('./pages/Goals'));
+const WeeklyCheckin = lazy(() => import('./pages/WeeklyCheckin'));
+const Privacy = lazy(() => import('./pages/Privacy'));
+const Terms = lazy(() => import('./pages/Terms'));
 
 
 function App() {
@@ -43,6 +45,8 @@ function App() {
       <ToastProvider>
         <Router>
           <div className="min-h-screen bg-hero-pattern">
+          <ErrorBoundary>
+          <Suspense fallback={<PageSkeleton />}>
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Landing />} />
@@ -157,6 +161,8 @@ function App() {
               {/* 404 Not Found */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+          </Suspense>
+          </ErrorBoundary>
 
             {/* Global AI Assistant */}
             <AIAssistant />
