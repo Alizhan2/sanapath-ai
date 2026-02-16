@@ -90,13 +90,14 @@ const Recommendations = ({ recommendations, userData }) => {
   };
 
   const generateLinkedInPost = async (project) => {
-    const techTags = project.tech_stack.slice(0, 5).map(t => `#${t.replace(/[^a-zA-Z0-9]/g, '')}`).join(' ');
+    const techStack = (project.tech_stack || []);
+    const techTags = techStack.slice(0, 5).map(t => `#${t.replace(/[^a-zA-Z0-9]/g, '')}`).join(' ');
     
     const post = `🚀 Excited to announce that I'm starting a new AI project!
 
 📌 Project: ${project.title}
 🎯 Difficulty: ${project.difficulty_level}
-💻 Tech Stack: ${project.tech_stack.join(', ')}
+💻 Tech Stack: ${techStack.join(', ')}
 
 I'm embarking on this journey through the SanaPath AI platform, joining 60,000+ students in the AI-Sana ecosystem who are building real-world AI solutions.
 
@@ -217,7 +218,7 @@ ${techTags} #AI #MachineLearning #SanaPathAI #AISana #BuildInPublic
 
                       {/* Tech Stack Pills */}
                       <div className="flex flex-wrap gap-2">
-                        {project.tech_stack.map((tech, i) => (
+                        {(project.tech_stack || []).map((tech, i) => (
                           <span
                             key={i}
                             className="px-3 py-1 rounded-lg bg-deep-blue-800/50 text-sm text-cyber-blue border border-cyber-blue/20"
@@ -256,7 +257,7 @@ ${techTags} #AI #MachineLearning #SanaPathAI #AISana #BuildInPublic
                             Learning Outcomes
                           </h4>
                           <ul className="grid md:grid-cols-2 gap-2">
-                            {project.learning_outcomes.map((outcome, i) => (
+                            {(project.learning_outcomes || []).map((outcome, i) => (
                               <li key={i} className="flex items-center gap-2 text-deep-blue-300">
                                 <div className="w-1.5 h-1.5 rounded-full bg-cyber-blue" />
                                 {outcome}
@@ -272,7 +273,7 @@ ${techTags} #AI #MachineLearning #SanaPathAI #AISana #BuildInPublic
                             4-Week Implementation Roadmap
                           </h4>
                           <div className="grid md:grid-cols-4 gap-4">
-                            {project.roadmap.map((week) => (
+                            {(project.roadmap || []).map((week) => (
                               <div
                                 key={week.week}
                                 className="p-4 rounded-xl bg-deep-blue-800/30 border border-deep-blue-700/50"
@@ -287,10 +288,10 @@ ${techTags} #AI #MachineLearning #SanaPathAI #AISana #BuildInPublic
                                   <div>
                                     <p className="text-xs text-deep-blue-400 mb-1">Tasks:</p>
                                     <ul className="space-y-1">
-                                      {week.tasks.map((task, i) => (
+                                      {(week.tasks || []).map((task, i) => (
                                         <li key={i} className="text-xs text-deep-blue-300 flex items-start gap-1">
                                           <span className="text-neon-purple-400">•</span>
-                                          {task}
+                                          {typeof task === 'string' ? task : task.name || task.title || 'Task'}
                                         </li>
                                       ))}
                                     </ul>
@@ -298,10 +299,10 @@ ${techTags} #AI #MachineLearning #SanaPathAI #AISana #BuildInPublic
                                   <div>
                                     <p className="text-xs text-deep-blue-400 mb-1">Deliverables:</p>
                                     <ul className="space-y-1">
-                                      {week.deliverables.map((del, i) => (
+                                      {(week.deliverables || []).map((del, i) => (
                                         <li key={i} className="text-xs text-cyber-blue flex items-start gap-1">
                                           <Check className="w-3 h-3 mt-0.5" />
-                                          {del}
+                                          {typeof del === 'string' ? del : del.name || del.title || 'Deliverable'}
                                         </li>
                                       ))}
                                     </ul>
@@ -319,7 +320,7 @@ ${techTags} #AI #MachineLearning #SanaPathAI #AISana #BuildInPublic
                             Tags
                           </h4>
                           <div className="flex flex-wrap gap-2">
-                            {project.tags.map((tag, i) => (
+                            {(project.tags || []).map((tag, i) => (
                               <span
                                 key={i}
                                 className="px-3 py-1 rounded-full bg-neon-purple-500/10 text-sm text-neon-purple-300 border border-neon-purple-500/20"
