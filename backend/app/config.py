@@ -13,7 +13,18 @@ class Settings:
     ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")  # Must be set in .env
     AI_PROVIDER: str = os.getenv("AI_PROVIDER", "gemini")  # "openai", "anthropic", or "gemini"
-    AI_DEMO_MODE: bool = os.getenv("AI_DEMO_MODE", "true").lower() == "true"  # Default to demo mode
+    AI_DEMO_MODE: bool = os.getenv("AI_DEMO_MODE", "auto").lower() == "true"  # "auto" = detect from keys
+    
+    @property
+    def is_ai_demo(self) -> bool:
+        """Smart demo mode: auto-detect if AI keys are available."""
+        explicit = os.getenv("AI_DEMO_MODE", "auto").lower()
+        if explicit == "true":
+            return True
+        if explicit == "false":
+            return False
+        # Auto-detect: demo only if NO keys configured
+        return not self.has_ai_keys
     
     # Database - SQLite by default, PostgreSQL for production
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./sanapath.db")
@@ -66,7 +77,9 @@ class Settings:
             "http://127.0.0.1:5173",
             "https://sanapath-ai.vercel.app",
             "https://sanapath-ai-frontend.vercel.app",
+            "https://sanapath-ai.netlify.app",
             "https://*.vercel.app",
+            "https://*.netlify.app",
             self.FRONTEND_URL,
         ]
         if self.CORS_ORIGINS:
@@ -80,5 +93,9 @@ settings = Settings()
 if settings.is_production:
     if not os.getenv("SECRET_KEY"):
         print("⚠️  WARNING: SECRET_KEY not set in production! Using generated key.")
-    if not settings.has_ai_keys and not settings.AI_DEMO_MODE:
+    if not settings.has_ai_keys and not settings.is_ai_demo:
         print("⚠️  WARNING: No AI API keys configured and demo mode is off!")
+    if settings.is_ai_demo:
+        print("ℹ️  AI running in DEMO mode. Set GEMINI_API_KEY to enable real AI.")
+    else:
+        print(f"✅ AI running with {settings.AI_PROVIDER} provider")

@@ -22,7 +22,7 @@ async def ai_chat(request: ChatRequest):
     Chat with the AI assistant. Uses Gemini API or falls back to smart demo responses.
     """
     try:
-        if not settings.AI_DEMO_MODE and settings.GEMINI_API_KEY:
+        if not settings.is_ai_demo and settings.GEMINI_API_KEY:
             return await _gemini_chat(request)
         else:
             return ChatResponse(

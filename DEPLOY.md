@@ -29,15 +29,17 @@ git push origin main
    - **Build Command:** `pip install -r requirements.txt`
    - **Start Command:** `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`
 
-### 2.3. Environment Variables (в Render)
+### 2.3. Environment Variables (в Render Dashboard → Environment)
 ```
 SECRET_KEY = (нажать Generate)
-GEMINI_API_KEY = AIzaSyBh2WvKx4Fte6q6UUU4YAElvQWtlrH5pto
-CORS_ORIGINS = https://sanapath-ai.vercel.app
+GEMINI_API_KEY = <your-gemini-api-key-from-aistudio.google.com>
+CORS_ORIGINS = https://sanapath-ai.netlify.app
+FRONTEND_URL = https://sanapath-ai.netlify.app
 ENVIRONMENT = production
 DEMO_MODE = true
-AI_DEMO_MODE = true
+AI_DEMO_MODE = auto
 ```
+> ⚠️ НИКОГДА не коммитьте API ключи в Git! Используйте только Dashboard.
 
 ### 2.4. Нажать "Create Web Service"
 - Подождать 5-10 минут для билда
@@ -45,32 +47,37 @@ AI_DEMO_MODE = true
 
 ---
 
-## Шаг 3: Деплой Frontend на Vercel (Бесплатно)
+## Шаг 3: Деплой Frontend на Netlify (Бесплатно)
 
 ### 3.1. Создать аккаунт
-1. Перейти на https://vercel.com
+1. Перейти на https://netlify.com
 2. "Sign up with GitHub"
 
 ### 3.2. Import Project
-1. "Add New" → "Project"
+1. "Add new site" → "Import an existing project"
 2. Выбрать репозиторий `SanaPath-AI`
 3. Настройки:
-   - **Framework Preset:** Vite
-   - **Root Directory:** `frontend`
+   - **Base directory:** `frontend`
    - **Build Command:** `npm run build`
-   - **Output Directory:** `dist`
+   - **Publish Directory:** `frontend/dist`
 
-### 3.3. Environment Variables (в Vercel)
+### 3.3. Environment Variables (в Netlify Dashboard → Site Settings → Environment Variables)
 ```
-VITE_API_URL = https://sanapath-api.onrender.com
-VITE_FIREBASE_API_KEY = AIzaSyAYOURKEY
+VITE_API_URL = https://sanapath-ai.onrender.com
+VITE_FIREBASE_API_KEY = <your-firebase-api-key>
 VITE_FIREBASE_AUTH_DOMAIN = sanapath-ai.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID = sanapath-ai
+VITE_FIREBASE_STORAGE_BUCKET = sanapath-ai.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID = <your-sender-id>
+VITE_FIREBASE_APP_ID = <your-app-id>
+VITE_FIREBASE_MEASUREMENT_ID = <your-measurement-id>
 ```
+> ⚠️ Получите эти значения из Firebase Console → Project Settings → Your Apps → Config
+> НИКОГДА не коммитьте их в репозиторий!
 
-### 3.4. Нажать "Deploy"
+### 3.4. Нажать "Deploy site"
 - Подождать 2-3 минуты
-- URL будет: `https://sanapath-ai.vercel.app`
+- URL будет: `https://sanapath-ai.netlify.app`
 
 ---
 
@@ -79,13 +86,13 @@ VITE_FIREBASE_PROJECT_ID = sanapath-ai
 ### Тестовые URLs:
 | Сервис | URL |
 |--------|-----|
-| Frontend | https://sanapath-ai.vercel.app |
-| Backend API | https://sanapath-api.onrender.com |
-| API Docs | https://sanapath-api.onrender.com/docs |
-| Health Check | https://sanapath-api.onrender.com/health |
+| Frontend | https://sanapath-ai.netlify.app |
+| Backend API | https://sanapath-ai.onrender.com |
+| API Docs | https://sanapath-ai.onrender.com/docs |
+| Health Check | https://sanapath-ai.onrender.com/health |
 
 ### Проверить:
-1. Открыть https://sanapath-ai.vercel.app
+1. Открыть https://sanapath-ai.netlify.app
 2. Попробовать Demo Login
 3. Пройти Survey
 4. Проверить Dashboard
@@ -101,18 +108,33 @@ VITE_FIREBASE_PROJECT_ID = sanapath-ai
 ```
 
 ### CORS ошибки
-1. В Render добавить переменную:
+1. В Render добавить переменные:
    ```
-   CORS_ORIGINS = https://your-app.vercel.app
+   CORS_ORIGINS = https://sanapath-ai.netlify.app
+   FRONTEND_URL = https://sanapath-ai.netlify.app
    ```
 2. Redeploy backend
 
 ### Frontend не подключается к API
-1. В Vercel проверить переменную:
+1. В Netlify проверить переменную:
    ```
-   VITE_API_URL = https://sanapath-api.onrender.com
+   VITE_API_URL = https://sanapath-ai.onrender.com
    ```
-2. Redeploy frontend
+2. Redeploy frontend (Deploys → Trigger deploy)
+
+### ИИ работает в Demo режиме?
+1. В Render добавить `GEMINI_API_KEY` (из https://aistudio.google.com/app/apikey)
+2. Убрать или установить `AI_DEMO_MODE = auto`
+3. Redeploy backend
+
+---
+
+## 🔒 Безопасность
+
+> **ВАЖНО**: Никогда не коммитьте API ключи в Git!
+> - Используйте Render Dashboard для backend ключей
+> - Используйте Netlify UI для frontend ключей
+> - Файлы `.env`, `.env.production` добавлены в `.gitignore`
 
 ---
 
@@ -133,6 +155,6 @@ VITE_FIREBASE_PROJECT_ID = sanapath-ai
 ## 🎉 Готово!
 
 После деплоя твой проект будет доступен по адресу:
-**https://sanapath-ai.vercel.app**
+**https://sanapath-ai.netlify.app**
 
 Поделись ссылкой для тестирования! 🚀

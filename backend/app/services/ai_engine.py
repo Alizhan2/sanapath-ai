@@ -1454,7 +1454,7 @@ async def get_recommendations(survey: SurveyResponse) -> RecommendationResponse:
     """Get AI recommendations - uses real AI if API key available, otherwise demo mode"""
     
     # Check if demo mode is enabled
-    if settings.AI_DEMO_MODE:
+    if settings.is_ai_demo:
         print("AI Demo mode enabled, using demo recommendations")
         return generate_demo_recommendations(survey)
     

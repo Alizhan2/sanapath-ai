@@ -12,6 +12,14 @@ __pycache__/
 env/
 venv/
 .env
+.env.local
+.env.production
+.env.staging
+.env.*.local
+frontend/.env.production
+frontend/.env.local
+frontend/.env
+backend/.env
 
 # IDE
 .vscode/
