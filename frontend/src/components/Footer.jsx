@@ -28,15 +28,15 @@ const Footer = () => {
       { name: 'Leaderboard', href: '/leaderboard' },
     ],
     Resources: [
-      { name: 'Documentation', href: '/about' },
-      { name: 'AI Assistant', href: '/dashboard' },
-      { name: 'Blog', href: '/community' },
+      { name: 'AI Assistant', href: '/ai-session' },
+      { name: 'Take Survey', href: '/survey' },
+      { name: 'Roadmap', href: '/roadmap' },
       { name: 'Support', href: '/contact' },
     ],
     Company: [
       { name: 'About AI-Sana', href: '/about' },
-      { name: 'Careers', href: '/about' },
-      { name: 'Partners', href: '/about' },
+      { name: 'Community', href: '/community' },
+      { name: 'Leaderboard', href: '/leaderboard' },
       { name: 'Contact', href: '/contact' },
     ],
     Legal: [
@@ -90,7 +90,18 @@ const Footer = () => {
                     </>
                   )}
                 </motion.button>
-              </form>              {emailError && <p className="text-xs text-red-400 mt-2">{emailError}</p>}              <p className="text-xs text-deep-blue-500 mt-2">
+              </form>
+              {emailError && <p className="text-xs text-red-400 mt-2">{emailError}</p>}
+              {subscribed && (
+                <motion.p
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-sm text-green-400 mt-2 flex items-center gap-1"
+                >
+                  <Heart className="w-4 h-4 text-pink-400" /> Successfully subscribed! Check your inbox.
+                </motion.p>
+              )}
+              <p className="text-xs text-deep-blue-500 mt-2">
                 No spam, unsubscribe anytime. Read our <Link to="/privacy" className="text-neon-purple-400 hover:underline">Privacy Policy</Link>
               </p>
             </div>

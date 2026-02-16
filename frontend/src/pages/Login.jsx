@@ -1,11 +1,12 @@
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Github, Mail, Sparkles, ArrowLeft, Eye, EyeOff, UserPlus, Linkedin } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { loginWithGoogle, loginWithGithub, loginWithEmail, registerWithEmail, isAuthenticated, loading, error, clearError } = useAuth();
   
   const [isRegister, setIsRegister] = useState(false);
@@ -18,15 +19,11 @@ const Login = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      // Check if user has projects - go to dashboard, else survey
-      const savedProjects = JSON.parse(localStorage.getItem('userProjects') || '[]');
-      if (savedProjects.length > 0) {
-        navigate('/dashboard');
-      } else {
-        navigate('/dashboard'); // Always go to dashboard first
-      }
+      // Redirect to the page they tried to visit, or dashboard
+      const redirectTo = location.state?.from?.pathname || '/dashboard';
+      navigate(redirectTo, { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, location]);
 
   useEffect(() => {
     if (error) {

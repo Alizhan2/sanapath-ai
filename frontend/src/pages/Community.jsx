@@ -35,11 +35,17 @@ const Community = () => {
       const response = await fetch(`${API_URL}/api/community/projects`);
       if (response.ok) {
         const data = await response.json();
-        setProjects(data);
+        // Backend returns { projects: [...], total, page, per_page }
+        const projectsList = Array.isArray(data) ? data : (data.projects || []);
+        if (projectsList.length > 0) {
+          setProjects(projectsList);
+          return;
+        }
       }
+      // If no projects from API, use demo data
+      throw new Error('No projects available');
     } catch (error) {
-      console.error('Error fetching projects:', error);
-      // Mock data for demo
+      console.error('Using demo community data:', error.message);
       setProjects([
         {
           id: '1',

@@ -28,15 +28,15 @@ const generateLeaderboard = (currentUser, currentStats) => {
     { name: 'Moldir E.', avatar: null, xp: 150, level: 1, streak: 0, projects: 1, tasks: 2, badge: '' },
   ];
 
-  // Add current user
+  // Add current user with safe defaults
   const me = {
     name: currentUser?.name || 'You',
     avatar: currentUser?.avatar_url || null,
-    xp: currentStats.xp,
-    level: currentStats.level,
-    streak: currentStats.streak,
-    projects: currentStats.totalProjects,
-    tasks: currentStats.completedTasks,
+    xp: currentStats?.xp || 0,
+    level: currentStats?.level || 1,
+    streak: currentStats?.streak || 0,
+    projects: currentStats?.totalProjects || 0,
+    tasks: currentStats?.completedTasks || 0,
     badge: '',
     isCurrentUser: true
   };

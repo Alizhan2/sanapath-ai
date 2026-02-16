@@ -6,7 +6,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import {
   Send, Bot, User, Sparkles, Loader2, ThumbsUp, ThumbsDown,
   Copy, Check, Lightbulb, Code, BookOpen, Map, Target,
-  Star, Flame, Wifi, WifiOff
+  Star, Flame, Wifi, WifiOff, Trash2
 } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://sanapath-ai.onrender.com';
@@ -164,6 +164,18 @@ const AISession = () => {
                 </p>
               </div>
             </div>
+            {messages.length > 1 && (
+              <button
+                onClick={() => {
+                  setMessages([]);
+                  localStorage.removeItem('sanapath_chat_history');
+                }}
+                className="p-2 rounded-lg hover:bg-deep-blue-700/50 text-deep-blue-500 hover:text-red-400 transition-colors"
+                title="Clear chat history"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {/* Messages */}
