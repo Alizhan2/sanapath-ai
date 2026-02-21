@@ -7,8 +7,8 @@ import { useEffect, useState } from 'react';
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { loginWithGoogle, loginWithGithub, loginWithEmail, registerWithEmail, isAuthenticated, loading, error, clearError } = useAuth();
-  
+  const { loginWithGoogle, loginWithGithub, loginWithEmail, registerWithEmail, demoLogin, isAuthenticated, loading, error, clearError } = useAuth();
+
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,7 +36,7 @@ const Login = () => {
     e.preventDefault();
     setFormError('');
     setFormLoading(true);
-    
+
     try {
       if (isRegister) {
         await registerWithEmail(email, password, name);
@@ -69,7 +69,8 @@ const Login = () => {
       await loginWithGoogle();
     } catch (err) {
       if (!err.message?.includes('popup-closed')) {
-        setFormError('Google login failed. Please try again.');
+        setFormError(`Google login failed: ${err.message}`);
+        console.error("GOOGLE LOGIN ERROR:", err);
       }
     }
   };
@@ -83,6 +84,17 @@ const Login = () => {
         setFormError('GitHub login failed. Please try again.');
       }
     }
+  };
+
+  const handleDemoLogin = async () => {
+    setFormError('');
+    setFormLoading(true);
+    try {
+      await demoLogin();
+    } catch (err) {
+      setFormError(err.message || 'Demo login failed');
+    }
+    setFormLoading(false);
   };
 
   if (loading) {
@@ -142,6 +154,16 @@ const Login = () => {
 
         {/* OAuth Buttons */}
         <div className="space-y-3 mb-6">
+          <motion.button
+            onClick={handleDemoLogin}
+            className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-neon-purple-600 to-cyber-blue hover:opacity-90 text-white font-medium rounded-xl transition-all shadow-lg shadow-neon-purple-500/20"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Sparkles className="w-5 h-5" />
+            <span>Continue with Demo Account</span>
+          </motion.button>
+
           <motion.button
             onClick={handleGoogleLogin}
             className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white hover:bg-gray-100 text-gray-800 font-medium rounded-xl transition-all"
@@ -206,7 +228,7 @@ const Login = () => {
               />
             </div>
           )}
-          
+
           <div>
             <input
               type="email"
@@ -217,7 +239,7 @@ const Login = () => {
               className="w-full px-4 py-3 bg-deep-blue-900/50 border border-deep-blue-700 rounded-xl text-white placeholder-deep-blue-500 focus:border-neon-purple-500 focus:outline-none transition-colors"
             />
           </div>
-          
+
           <div className="relative">
             <input
               type={showPassword ? 'text' : 'password'}

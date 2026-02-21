@@ -2,7 +2,8 @@ import json
 from typing import List
 from openai import OpenAI
 from anthropic import Anthropic
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from ..config import settings
 from ..models.survey import SurveyResponse, ProjectRecommendation, ProjectRoadmapWeek, RecommendationResponse
 
@@ -63,7 +64,7 @@ IMPORTANT: Your response must be valid JSON matching this exact structure:
     "personalization_summary": "Summary of why these projects match the student..."
 }
 
-CRITICAL: Each task MUST have detailed steps and real working resource links (YouTube, official docs, tutorials). Generate exactly 5 unique project recommendations."""
+CRITICAL: Each task MUST have detailed steps and real working resource links (YouTube, official docs, tutorials). Generate exactly 1 unique project recommendation."""
 
 
 def build_user_prompt(survey: SurveyResponse) -> str:
@@ -84,7 +85,7 @@ Student Profile:
 - Team Preference: {survey.team_preference}
 - Collaboration Tools: {', '.join(survey.collaboration_tools)}
 
-Based on this comprehensive profile, generate 5 personalized AI project recommendations with detailed 4-week roadmaps. Ensure projects align with the student's skill level, interests, and career goals.
+Based on this comprehensive profile, generate exactly 1 personalized AI project recommendation with a detailed 4-week roadmap. Ensure the project aligns with the student's skill level, interests, and career goals.
 """
 
 
@@ -162,31 +163,28 @@ async def get_recommendations_anthropic(survey: SurveyResponse) -> Recommendatio
 
 async def get_recommendations_gemini(survey: SurveyResponse) -> RecommendationResponse:
     """Get recommendations using Google Gemini AI"""
-    genai.configure(api_key=settings.GEMINI_API_KEY)
-    
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    client = genai.Client(api_key=settings.GEMINI_API_KEY)
     
     prompt = f"""{SYSTEM_PROMPT}
 
 {build_user_prompt(survey)}
 
-IMPORTANT: Respond ONLY with valid JSON, no additional text or markdown."""
-    
-    response = model.generate_content(
-        prompt,
-        generation_config=genai.types.GenerationConfig(
+IMPORTANT: Respond ONLY with valid JSON, no additional text or markdown.
+You MUST follow the schema exactly as defined."""
+
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=prompt,
+        config=types.GenerateContentConfig(
             temperature=0.7,
-            max_output_tokens=4000,
+            max_output_tokens=8192,
+            response_mime_type="application/json",
+            response_schema=RecommendationResponse,
         )
     )
     
     # Extract JSON from response
     response_text = response.text
-    # Clean up if wrapped in markdown code block
-    if "```json" in response_text:
-        response_text = response_text.split("```json")[1].split("```")[0]
-    elif "```" in response_text:
-        response_text = response_text.split("```")[1].split("```")[0]
     
     result = json.loads(response_text.strip())
     

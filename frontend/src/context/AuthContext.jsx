@@ -129,6 +129,29 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const demoLogin = async () => {
+    setError(null);
+    try {
+      const response = await axios.post(`${API_URL}/api/auth/demo/login`, {
+        email: 'demo@sanapath.ai',
+        name: 'Demo User'
+      });
+
+      localStorage.setItem('token', response.data.access_token);
+
+      setUser({
+        id: response.data.user.id,
+        email: response.data.user.email,
+        name: response.data.user.name,
+        avatar_url: response.data.user.avatar_url,
+        provider: 'demo'
+      });
+    } catch (err) {
+      setError(err.response?.data?.detail || err.message || 'Demo login failed');
+      throw err;
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -138,6 +161,7 @@ export const AuthProvider = ({ children }) => {
     loginWithGithub,
     loginWithEmail,
     registerWithEmail,
+    demoLogin,
     logout,
     clearError: () => setError(null)
   };
