@@ -13,7 +13,7 @@ from ..database import get_db
 from ..models.user import User, UserProject
 from ..services.auth import get_current_user
 
-router = APIRouter(prefix="/projects", tags=["projects"])
+router = APIRouter(prefix="/api/projects", tags=["projects"])
 
 
 # Pydantic models

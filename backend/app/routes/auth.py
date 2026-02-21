@@ -17,6 +17,24 @@ router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 # ===== FIREBASE AUTHENTICATION =====
 
+import os
+import firebase_admin
+from firebase_admin import auth as firebase_auth
+from firebase_admin import credentials
+
+# Initialize Firebase admin SDK if not already initialized
+try:
+    firebase_admin.get_app()
+except ValueError:
+    # Check for service account key file
+    cred_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "serviceAccountKey.json")
+    if os.path.exists(cred_path):
+        cred = credentials.Certificate(cred_path)
+        firebase_admin.initialize_app(cred)
+    else:
+        firebase_admin.initialize_app()
+
+
 class FirebaseVerifyRequest(BaseModel):
     token: str
     email: EmailStr
@@ -28,31 +46,39 @@ class FirebaseVerifyRequest(BaseModel):
 @router.post("/firebase/verify")
 async def firebase_verify(request: FirebaseVerifyRequest, db: AsyncSession = Depends(get_db)):
     """Verify Firebase token and create/get user in our database"""
-    # In production, you should verify the Firebase token with Firebase Admin SDK
-    # For now, we trust the token since it comes from Firebase client
-    
+    # Verify the Firebase token with Firebase Admin SDK
+    try:
+        decoded_token = firebase_auth.verify_id_token(request.token)
+        # Use details from token to be secure, fallback to request if not present
+        secure_email = decoded_token.get("email", request.email)
+        secure_name = decoded_token.get("name", request.name)
+        secure_avatar = decoded_token.get("picture", request.avatar_url)
+        secure_uid = decoded_token.get("uid")
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Invalid Firebase authentication token: {str(e)}")
+        
     # Find or create user by email
-    result = await db.execute(select(User).where(User.email == request.email))
+    result = await db.execute(select(User).where(User.email == secure_email))
     user = result.scalar_one_or_none()
     
     if not user:
         # Create new user
         user = User(
-            email=request.email,
-            name=request.name,
-            avatar_url=request.avatar_url or f"https://api.dicebear.com/7.x/avataaars/svg?seed={request.email}",
+            email=secure_email,
+            name=secure_name,
+            avatar_url=secure_avatar or f"https://api.dicebear.com/7.x/avataaars/svg?seed={secure_email}",
             provider=request.provider,
-            provider_id=f"firebase_{request.email}"
+            provider_id=f"firebase_{secure_uid}"
         )
         db.add(user)
         await db.commit()
         await db.refresh(user)
     else:
         # Update user info if needed
-        if request.name and request.name != user.name:
-            user.name = request.name
-        if request.avatar_url and request.avatar_url != user.avatar_url:
-            user.avatar_url = request.avatar_url
+        if secure_name and secure_name != user.name:
+            user.name = secure_name
+        if secure_avatar and secure_avatar != user.avatar_url:
+            user.avatar_url = secure_avatar
         if request.provider and request.provider != user.provider:
             user.provider = request.provider
         await db.commit()

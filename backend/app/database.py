@@ -34,5 +34,6 @@ async def get_db():
             await session.close()
 
 async def init_db():
+    from .models.user import User  # Import models here so Base knows about them
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

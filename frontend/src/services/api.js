@@ -127,28 +127,28 @@ export const surveyAPI = {
 
 // Projects API
 export const projectsAPI = {
-  startProject: (projectData) => apiCall('/projects/start', {
+  startProject: (projectData) => apiCall('/api/projects/start', {
     method: 'POST',
     body: JSON.stringify(projectData),
   }),
 
   getMyProjects: (status) => {
     const params = status ? `?status_filter=${status}` : '';
-    return apiCall(`/projects/my-projects${params}`);
+    return apiCall(`/api/projects/my-projects${params}`);
   },
 
-  getProject: (uuid) => apiCall(`/projects/${uuid}`),
+  getProject: (uuid) => apiCall(`/api/projects/${uuid}`),
 
-  updateProject: (uuid, data) => apiCall(`/projects/${uuid}`, {
+  updateProject: (uuid, data) => apiCall(`/api/projects/${uuid}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   }),
 
-  deleteProject: (uuid) => apiCall(`/projects/${uuid}`, {
+  deleteProject: (uuid) => apiCall(`/api/projects/${uuid}`, {
     method: 'DELETE',
   }),
 
-  completeTask: (uuid, taskId) => apiCall(`/projects/${uuid}/complete-task`, {
+  completeTask: (uuid, taskId) => apiCall(`/api/projects/${uuid}/complete-task`, {
     method: 'POST',
     body: JSON.stringify({ task_id: taskId }),
   }),
