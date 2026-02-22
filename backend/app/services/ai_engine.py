@@ -1505,3 +1505,66 @@ Looking forward to sharing my progress and connecting with fellow AI enthusiasts
 🔗 Discover your personalized AI project at SanaPath AI"""
     
     return post
+
+async def generate_custom_project(prompt: str, user) -> dict:
+    """Generate a custom project based on a user prompt using Gemini AI"""
+    if not settings.GEMINI_API_KEY:
+        raise ValueError("GEMINI_API_KEY is not configured")
+        
+    client = genai.Client(api_key=settings.GEMINI_API_KEY)
+    
+    system_prompt = f"""You are an expert AI career counselor and project recommendation engine for the SanaPath AI platform.
+
+The user has requested a custom project idea based on this prompt:
+"{prompt}"
+
+Generate a detailed project plan that matches their request.
+You must provide:
+1. A compelling project title
+2. A detailed description (2-3 sentences)
+3. Category (e.g., Web Development, Data Science, AI/ML)
+4. Difficulty level (Beginner, Intermediate, Advanced, Expert)
+5. Complete tech stack (programming languages, frameworks, tools)
+6. Estimated duration in hours (integer)
+7. Key learning goals (3-5 bullet points)
+8. Skills gained (3-5 bullet points)
+9. A DETAILED 4-week implementation roadmap where EACH WEEK includes:
+   - week number (1-4)
+   - title
+   - tasks (list of strings, each describing a task)
+
+IMPORTANT: Your response must be valid JSON matching this exact structure:
+{{
+    "title": "Project Title",
+    "description": "Detailed description...",
+    "category": "Web Development",
+    "difficulty": "Intermediate",
+    "tech_stack": ["React", "Node.js", "MongoDB"],
+    "estimated_hours": 40,
+    "learning_goals": ["goal1", "goal2"],
+    "skills_gained": ["skill1", "skill2"],
+    "roadmap": [
+        {{
+            "week": 1,
+            "title": "Week 1: Foundation",
+            "tasks": [
+                "Set up development environment",
+                "Design database schema"
+            ]
+        }}
+    ]
+}}
+"""
+    
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=system_prompt,
+        config=types.GenerateContentConfig(
+            temperature=0.7,
+            max_output_tokens=8192,
+            response_mime_type="application/json",
+        )
+    )
+    
+    result = json.loads(response.text.strip())
+    return result

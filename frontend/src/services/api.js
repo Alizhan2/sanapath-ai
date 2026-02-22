@@ -140,6 +140,11 @@ export const surveyAPI = {
 
 // Projects API
 export const projectsAPI = {
+  generateProject: (prompt) => apiCall('/api/projects/generate', {
+    method: 'POST',
+    body: JSON.stringify({ prompt }),
+  }),
+
   startProject: (projectData) => apiCall('/api/projects/start', {
     method: 'POST',
     body: JSON.stringify(projectData),

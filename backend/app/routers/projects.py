@@ -74,6 +74,10 @@ class ProjectListResponse(BaseModel):
     completed_count: int
 
 
+class GenerateProjectRequest(BaseModel):
+    prompt: str
+
+
 # Demo project templates for when user is not authenticated
 DEMO_PROJECTS = [
     {
@@ -99,6 +103,23 @@ DEMO_PROJECTS = [
         "estimated_hours": 20
     }
 ]
+
+
+from ..services.ai_engine import generate_custom_project
+
+@router.post("/generate", response_model=ProjectCreate)
+async def generate_project(
+    request: GenerateProjectRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Generate a custom project based on a user prompt using AI.
+    """
+    try:
+        project_data = await generate_custom_project(request.prompt, current_user)
+        return ProjectCreate(**project_data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating project: {str(e)}")
 
 
 @router.post("/start", response_model=ProjectResponse)

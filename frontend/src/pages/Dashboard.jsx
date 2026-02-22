@@ -376,21 +376,33 @@ const Dashboard = () => {
             <div className="lg:col-span-2 space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2"><Rocket className="w-5 h-5 text-neon-purple-400" /> Active Projects</h3>
-                <Link to="/survey" className="flex items-center gap-1 text-sm text-neon-purple-400 hover:text-neon-purple-300">
-                  <Plus className="w-4 h-4" /> New Project
-                </Link>
+                <div className="flex items-center gap-4">
+                  <Link to="/generate-project" className="flex items-center gap-1 text-sm text-cyber-blue hover:text-cyber-blue/80">
+                    <Brain className="w-4 h-4" /> Custom AI Project
+                  </Link>
+                  <Link to="/survey" className="flex items-center gap-1 text-sm text-neon-purple-400 hover:text-neon-purple-300">
+                    <Plus className="w-4 h-4" /> Take Survey
+                  </Link>
+                </div>
               </div>
 
               {activeProjects.length === 0 ? (
                 <div className="card-glass p-8 text-center">
                   <Brain className="w-12 h-12 text-neon-purple-400 mx-auto mb-3" />
                   <h3 className="text-lg font-semibold text-white mb-2">Start your first project</h3>
-                  <p className="text-deep-blue-400 mb-4 text-sm">Take our survey to get AI-matched project recommendations.</p>
-                  <Link to="/survey">
-                    <motion.button className="btn-primary text-sm" whileHover={{ scale: 1.05 }}>
-                      <Zap className="w-4 h-4 mr-2" /> Get Recommendations
-                    </motion.button>
-                  </Link>
+                  <p className="text-deep-blue-400 mb-4 text-sm">Take our survey or generate a custom project with AI.</p>
+                  <div className="flex items-center justify-center gap-4">
+                    <Link to="/survey">
+                      <motion.button className="btn-primary text-sm" whileHover={{ scale: 1.05 }}>
+                        <Zap className="w-4 h-4 mr-2" /> Get Recommendations
+                      </motion.button>
+                    </Link>
+                    <Link to="/generate-project">
+                      <motion.button className="px-4 py-2 rounded-lg bg-deep-blue-800 text-white text-sm hover:bg-deep-blue-700 transition-colors flex items-center" whileHover={{ scale: 1.05 }}>
+                        <Brain className="w-4 h-4 mr-2" /> Custom Project
+                      </motion.button>
+                    </Link>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-3">

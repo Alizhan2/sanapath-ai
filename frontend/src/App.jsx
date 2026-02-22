@@ -35,6 +35,7 @@ const Goals = lazy(() => import('./pages/Goals'));
 const WeeklyCheckin = lazy(() => import('./pages/WeeklyCheckin'));
 const Privacy = lazy(() => import('./pages/Privacy'));
 const Terms = lazy(() => import('./pages/Terms'));
+const GenerateProject = lazy(() => import('./pages/GenerateProject'));
 
 
 function App() {
@@ -72,6 +73,15 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/generate-project"
+                element={
+                  <ProtectedRoute>
+                    <GenerateProject />
                   </ProtectedRoute>
                 }
               />
