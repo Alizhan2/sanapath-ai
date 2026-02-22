@@ -46,15 +46,17 @@ const Login = () => {
     } catch (err) {
       const errorMessage = err.message || 'Authentication failed';
       // Translate Firebase errors to user-friendly messages
-      if (errorMessage.includes('user-not-found')) {
+      if (errorMessage.includes('Invalid login credentials')) {
+        setFormError('Incorrect email or password');
+      } else if (errorMessage.includes('User already registered') || errorMessage.includes('email-already-in-use')) {
+        setFormError('An account with this email already exists');
+      } else if (errorMessage.includes('Password should be at least') || errorMessage.includes('weak-password')) {
+        setFormError('Password should be at least 6 characters');
+      } else if (errorMessage.includes('user-not-found')) {
         setFormError('No account found with this email');
       } else if (errorMessage.includes('wrong-password')) {
         setFormError('Incorrect password');
-      } else if (errorMessage.includes('email-already-in-use')) {
-        setFormError('An account with this email already exists');
-      } else if (errorMessage.includes('weak-password')) {
-        setFormError('Password should be at least 6 characters');
-      } else if (errorMessage.includes('invalid-email')) {
+      } else if (errorMessage.includes('invalid-email') || errorMessage.includes('Invalid email') || errorMessage.includes('Invalid email')) {
         setFormError('Invalid email address');
       } else {
         setFormError(errorMessage);
@@ -67,11 +69,9 @@ const Login = () => {
     setFormError('');
     try {
       await loginWithGoogle();
+      // OAuth redirects away from page — no further action needed here
     } catch (err) {
-      if (!err.message?.includes('popup-closed')) {
-        setFormError(`Google login failed: ${err.message}`);
-        console.error("GOOGLE LOGIN ERROR:", err);
-      }
+      setFormError('Google login failed. Please try again.');
     }
   };
 
@@ -80,9 +80,7 @@ const Login = () => {
     try {
       await loginWithGithub();
     } catch (err) {
-      if (!err.message?.includes('popup-closed')) {
-        setFormError('GitHub login failed. Please try again.');
-      }
+      setFormError('GitHub login failed. Please try again.');
     }
   };
 

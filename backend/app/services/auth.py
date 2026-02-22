@@ -26,7 +26,27 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 
+def verify_supabase_token(token: str) -> Optional[dict]:
+    """Verify a Supabase-issued JWT using the project JWT secret."""
+    if not settings.SUPABASE_JWT_SECRET:
+        return None
+    try:
+        payload = jwt.decode(
+            token,
+            settings.SUPABASE_JWT_SECRET,
+            algorithms=["HS256"],
+            audience="authenticated",
+        )
+        return payload
+    except JWTError:
+        return None
+
+
 def verify_token(token: str) -> Optional[dict]:
+    """Verify a JWT. Tries Supabase JWT first, falls back to app-issued JWT."""
+    payload = verify_supabase_token(token)
+    if payload:
+        return payload
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         return payload
@@ -72,14 +92,37 @@ async def get_current_user(
     
     result = await db.execute(select(User).where(User.uuid == user_id))
     user = result.scalar_one_or_none()
-    
+
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
-            headers={"WWW-Authenticate": "Bearer"},
+        # Auto-create user from Supabase JWT claims (OAuth / magic-link users)
+        email = payload.get("email", "")
+        user_meta = payload.get("user_metadata", {})
+        full_name = (
+            user_meta.get("full_name")
+            or user_meta.get("name")
+            or (email.split("@")[0] if email else user_id)
         )
-    
+        provider = payload.get("app_metadata", {}).get("provider", "supabase")
+
+        user = User(
+            uuid=user_id,
+            email=email,
+            name=full_name,
+            avatar_url=user_meta.get("avatar_url") or user_meta.get("picture"),
+            provider=provider,
+            is_active=True,
+        )
+        db.add(user)
+        try:
+            await db.commit()
+            await db.refresh(user)
+        except Exception:
+            await db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create user record",
+            )
+
     return user
 
 

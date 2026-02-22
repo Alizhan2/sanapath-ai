@@ -28,6 +28,9 @@ class Settings:
     
     # Database - SQLite by default, PostgreSQL for production
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./sanapath.db")
+
+    # Supabase - JWT secret for verifying Supabase-issued tokens
+    SUPABASE_JWT_SECRET: str = os.getenv("SUPABASE_JWT_SECRET", "")
     
     # JWT - Generate secure key if not provided
     SECRET_KEY: str = os.getenv("SECRET_KEY", "") or secrets.token_urlsafe(32)

@@ -1,173 +1,120 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import {
-  auth,
-  onAuthStateChanged,
-  signInWithGoogle,
-  signInWithGithub,
-  signInWithEmail,
-  signUpWithEmail,
-  logOut,
-  updateUserProfile
-} from '../config/firebase';
-import axios from 'axios';
+import { supabase } from '../config/supabase';
 
 const AuthContext = createContext(null);
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const buildUser = (supabaseUser) => ({
+    id: supabaseUser.id,
+    email: supabaseUser.email,
+    name: supabaseUser.user_metadata?.full_name ||
+          supabaseUser.user_metadata?.name ||
+          supabaseUser.email?.split('@')[0],
+    avatar_url: supabaseUser.user_metadata?.avatar_url ||
+                supabaseUser.user_metadata?.picture || null,
+    provider: supabaseUser.app_metadata?.provider || 'email',
+  });
+
   useEffect(() => {
-    // Skip if Firebase auth is not initialized
-    if (!auth) {
-      setLoading(false);
-      return;
-    }
-
-    // Listen for Firebase auth state changes
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        // Get Firebase ID token
-        const token = await firebaseUser.getIdToken();
-
-        // Sync with backend
-        try {
-          const response = await axios.post(`${API_URL}/api/auth/firebase/verify`, {
-            token,
-            email: firebaseUser.email,
-            name: firebaseUser.displayName || firebaseUser.email?.split('@')[0],
-            avatar_url: firebaseUser.photoURL,
-            provider: firebaseUser.providerData[0]?.providerId || 'firebase'
-          });
-
-          // Store backend token
-          localStorage.setItem('token', response.data.access_token);
-
-          setUser({
-            id: response.data.user.id,
-            email: firebaseUser.email,
-            name: firebaseUser.displayName || firebaseUser.email?.split('@')[0],
-            avatar_url: firebaseUser.photoURL,
-            provider: firebaseUser.providerData[0]?.providerId || 'firebase',
-            firebaseUser
-          });
-        } catch (err) {
-          console.error('Backend sync error:', err);
-          // Still allow user to use app with Firebase only
-          setUser({
-            id: firebaseUser.uid,
-            email: firebaseUser.email,
-            name: firebaseUser.displayName || firebaseUser.email?.split('@')[0],
-            avatar_url: firebaseUser.photoURL,
-            provider: firebaseUser.providerData[0]?.providerId || 'firebase',
-            firebaseUser
-          });
-        }
-      } else {
-        setUser(null);
-        localStorage.removeItem('token');
-      }
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session ? buildUser(session.user) : null);
+      if (session) localStorage.setItem('token', session.access_token);
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session ? buildUser(session.user) : null);
+      if (session) {
+        localStorage.setItem('token', session.access_token);
+      } else {
+        localStorage.removeItem('token');
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const loginWithGoogle = async () => {
     setError(null);
-    try {
-      await signInWithGoogle();
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    }
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/dashboard` },
+    });
+    if (error) { setError(error.message); throw error; }
   };
 
   const loginWithGithub = async () => {
     setError(null);
-    try {
-      await signInWithGithub();
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    }
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'github',
+      options: { redirectTo: `${window.location.origin}/dashboard` },
+    });
+    if (error) { setError(error.message); throw error; }
   };
 
   const loginWithEmail = async (email, password) => {
     setError(null);
-    try {
-      await signInWithEmail(email, password);
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    }
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) { setError(error.message); throw error; }
   };
 
   const registerWithEmail = async (email, password, name) => {
     setError(null);
-    try {
-      const { user: firebaseUser } = await signUpWithEmail(email, password);
-      if (name) {
-        await updateUserProfile(firebaseUser, { displayName: name });
-      }
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    }
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: name, name } },
+    });
+    if (error) { setError(error.message); throw error; }
   };
 
   const logout = async () => {
-    try {
-      await logOut();
-      localStorage.removeItem('token');
-      setUser(null);
-    } catch (err) {
-      console.error('Logout error:', err);
-    }
+    await supabase.auth.signOut();
+    localStorage.removeItem('token');
+    setUser(null);
   };
 
   const demoLogin = async () => {
     setError(null);
     try {
-      const response = await axios.post(`${API_URL}/api/auth/demo/login`, {
-        email: 'demo@sanapath.ai',
-        name: 'Demo User'
+      const API_URL = import.meta.env.VITE_API_URL || 'https://sanapath-ai.onrender.com';
+      const response = await fetch(`${API_URL}/api/auth/demo/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'demo@sanapath.ai', name: 'Demo User' }),
       });
-
-      localStorage.setItem('token', response.data.access_token);
-
+      if (!response.ok) throw new Error('Demo login failed');
+      const data = await response.json();
+      localStorage.setItem('token', data.access_token);
       setUser({
-        id: response.data.user.id,
-        email: response.data.user.email,
-        name: response.data.user.name,
-        avatar_url: response.data.user.avatar_url,
-        provider: 'demo'
+        id: data.user.id,
+        email: data.user.email,
+        name: data.user.name,
+        avatar_url: data.user.avatar_url,
+        provider: 'demo',
       });
     } catch (err) {
-      setError(err.response?.data?.detail || err.message || 'Demo login failed');
+      setError(err.message || 'Demo login failed');
       throw err;
     }
   };
 
-  const value = {
-    user,
-    loading,
-    error,
-    isAuthenticated: !!user,
-    loginWithGoogle,
-    loginWithGithub,
-    loginWithEmail,
-    registerWithEmail,
-    demoLogin,
-    logout,
-    clearError: () => setError(null)
-  };
-
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{
+      user, loading, error,
+      isAuthenticated: !!user,
+      loginWithGoogle, loginWithGithub,
+      loginWithEmail, registerWithEmail,
+      demoLogin,
+      logout,
+      clearError: () => setError(null),
+    }}>
       {children}
     </AuthContext.Provider>
   );
@@ -175,9 +122,7 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
 
