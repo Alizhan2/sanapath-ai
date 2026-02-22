@@ -1,78 +1,66 @@
 import os
 import secrets
-from dotenv import load_dotenv
+from typing import List
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-load_dotenv()
-
-
-class Settings:
-    """Application settings with environment variable support."""
+class Settings(BaseSettings):
+    """Application settings with automatic validation via Pydantic."""
     
-    # AI Settings - NO hardcoded keys!
-    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
-    ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
-    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")  # Must be set in .env
-    AI_PROVIDER: str = os.getenv("AI_PROVIDER", "gemini")  # "openai", "anthropic", or "gemini"
-    AI_DEMO_MODE: bool = os.getenv("AI_DEMO_MODE", "auto").lower() == "true"  # "auto" = detect from keys
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+    # AI Settings
+    OPENAI_API_KEY: str = ""
+    ANTHROPIC_API_KEY: str = ""
+    GEMINI_API_KEY: str = ""
+    AI_PROVIDER: str = "gemini"
+    AI_DEMO_MODE: str = "auto"
     
     @property
     def is_ai_demo(self) -> bool:
         """Smart demo mode: auto-detect if AI keys are available."""
-        explicit = os.getenv("AI_DEMO_MODE", "auto").lower()
+        explicit = self.AI_DEMO_MODE.lower()
         if explicit == "true":
             return True
         if explicit == "false":
             return False
-        # Auto-detect: demo only if NO keys configured
         return not self.has_ai_keys
     
-    # Database - SQLite by default, PostgreSQL for production
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./sanapath.db")
+    @property
+    def has_ai_keys(self) -> bool:
+        """Check if any AI API key is configured."""
+        return bool(self.OPENAI_API_KEY or self.ANTHROPIC_API_KEY or self.GEMINI_API_KEY)
 
-    # Supabase - JWT secret for verifying Supabase-issued tokens
-    SUPABASE_JWT_SECRET: str = os.getenv("SUPABASE_JWT_SECRET", "")
+    # Database
+    DATABASE_URL: str = "sqlite+aiosqlite:///./sanapath.db"
+    SUPABASE_JWT_SECRET: str = ""
     
-    # JWT - Generate secure key if not provided
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "") or secrets.token_urlsafe(32)
-    ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
+    # JWT & Security
+    SECRET_KEY: str = "YOUR_FALLBACK_SECRET_KEY_FOR_DEV_ONLY" 
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
     
-    # OAuth - GitHub
-    GITHUB_CLIENT_ID: str = os.getenv("GITHUB_CLIENT_ID", "")
-    GITHUB_CLIENT_SECRET: str = os.getenv("GITHUB_CLIENT_SECRET", "")
-    
-    # OAuth - Google
-    GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "")
-    GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET", "")
-    
-    # OAuth - LinkedIn
-    LINKEDIN_CLIENT_ID: str = os.getenv("LINKEDIN_CLIENT_ID", "")
-    LINKEDIN_CLIENT_SECRET: str = os.getenv("LINKEDIN_CLIENT_SECRET", "")
+    # OAuth
+    GITHUB_CLIENT_ID: str = ""
+    GITHUB_CLIENT_SECRET: str = ""
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    LINKEDIN_CLIENT_ID: str = ""
+    LINKEDIN_CLIENT_SECRET: str = ""
     
     # URLs
-    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
-    BACKEND_URL: str = os.getenv("BACKEND_URL", "http://localhost:8000")
+    FRONTEND_URL: str = "http://localhost:5173"
+    BACKEND_URL: str = "http://localhost:8000"
+    CORS_ORIGINS: str = ""
     
-    # CORS - Additional allowed origins (comma-separated)
-    CORS_ORIGINS: str = os.getenv("CORS_ORIGINS", "")
-    
-    # Demo mode - allows login without OAuth
-    DEMO_MODE: bool = os.getenv("DEMO_MODE", "true").lower() == "true"
-    
-    # Environment
-    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")  # development, staging, production
+    DEMO_MODE: bool = True
+    ENVIRONMENT: str = "development"
     
     @property
     def is_production(self) -> bool:
         return self.ENVIRONMENT == "production"
     
     @property
-    def has_ai_keys(self) -> bool:
-        """Check if any AI API key is configured."""
-        return bool(self.OPENAI_API_KEY or self.ANTHROPIC_API_KEY or self.GEMINI_API_KEY)
-    
-    @property
-    def cors_origins_list(self) -> list:
+    def cors_origins_list(self) -> List[str]:
         """Get list of allowed CORS origins."""
         origins = [
             "http://localhost:3000",
@@ -87,15 +75,14 @@ class Settings:
         ]
         if self.CORS_ORIGINS:
             origins.extend([o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()])
-        return list(set(origins))  # Remove duplicates
-
+        return list(set(origins))
 
 settings = Settings()
 
 # Warn about missing configuration in production
 if settings.is_production:
-    if not os.getenv("SECRET_KEY"):
-        print("⚠️  WARNING: SECRET_KEY not set in production! Using generated key.")
+    if settings.SECRET_KEY == "YOUR_FALLBACK_SECRET_KEY_FOR_DEV_ONLY":
+        print("⚠️  WARNING: SECRET_KEY not set in production! Using fallback key.")
     if not settings.has_ai_keys and not settings.is_ai_demo:
         print("⚠️  WARNING: No AI API keys configured and demo mode is off!")
     if settings.is_ai_demo:

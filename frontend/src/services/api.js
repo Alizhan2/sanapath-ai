@@ -56,8 +56,21 @@ async function apiCall(endpoint, options = {}) {
         );
       }
 
+      // Improved handling for FastAPI validation errors (status 422)
+      let errorMessage = data.message || `Request failed with status ${response.status}`;
+      
+      if (data.detail) {
+        if (Array.isArray(data.detail)) {
+          // If FastAPI returned a list of validation errors
+          errorMessage = data.detail.map(err => `${err.loc?.join('.') || 'Field'}: ${err.msg}`).join(', ');
+        } else if (typeof data.detail === 'string') {
+          // If it's a simple error string
+          errorMessage = data.detail;
+        }
+      }
+
       throw new ApiError(
-        data.message || data.detail || `Request failed with status ${response.status}`,
+        errorMessage,
         response.status,
         data.error_code || 'API_ERROR'
       );
