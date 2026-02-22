@@ -39,10 +39,10 @@ async def ai_chat(request: ChatRequest):
 
 async def _gemini_chat(request: ChatRequest) -> ChatResponse:
     """Use Google Gemini for real AI responses."""
-    import google.generativeai as genai
+    from google import genai
+    from google.genai import types
 
-    genai.configure(api_key=settings.GEMINI_API_KEY)
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
     system_context = """You are a helpful AI learning assistant for SanaPath AI, 
 a platform that helps students find and build AI/ML projects. You are part of the AI-Sana ecosystem 
@@ -64,9 +64,10 @@ If the student mentions a specific technology, provide relevant tips and resourc
 
     prompt = f"{system_context}\n\nStudent's question: {request.message}"
 
-    response = model.generate_content(
-        prompt,
-        generation_config=genai.types.GenerationConfig(
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=prompt,
+        config=types.GenerateContentConfig(
             temperature=0.7,
             max_output_tokens=1000,
         ),
