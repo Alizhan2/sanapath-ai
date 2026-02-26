@@ -115,9 +115,15 @@ async def generate_project(
     """
     Generate a custom project based on a user prompt using AI.
     """
+    import asyncio
     try:
-        project_data = await generate_custom_project(request.prompt, current_user)
+        project_data = await asyncio.wait_for(
+            generate_custom_project(request.prompt, current_user),
+            timeout=60.0  # 60 second timeout
+        )
         return ProjectCreate(**project_data)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Project generation timed out. Please try a shorter or simpler prompt.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating project: {str(e)}")
 

@@ -173,7 +173,7 @@ IMPORTANT: Respond ONLY with valid JSON, no additional text or markdown.
 You MUST follow the schema exactly as defined."""
 
     response = client.models.generate_content(
-        model='gemini-2.5-flash',
+        model='gemini-2.0-flash',
         contents=prompt,
         config=types.GenerateContentConfig(
             temperature=0.7,
@@ -1557,7 +1557,7 @@ IMPORTANT: Your response must be valid JSON matching this exact structure:
 """
     
     response = client.models.generate_content(
-        model='gemini-2.5-flash',
+        model='gemini-2.0-flash',
         contents=system_prompt,
         config=types.GenerateContentConfig(
             temperature=0.7,

@@ -12,16 +12,24 @@ const GenerateProject = () => {
   const navigate = useNavigate();
   const toast = useToast();
 
+  const [generationStep, setGenerationStep] = useState('');
+
   const handleGenerate = async (e) => {
     e.preventDefault();
     if (!prompt.trim()) return;
 
     setIsGenerating(true);
+    setGenerationStep('Sending request to AI...');
     try {
+      // Create an AbortController with 90s timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 90000);
+
+      setGenerationStep('AI is generating your project plan...');
       const projectData = await projectsAPI.generateProject(prompt);
+      clearTimeout(timeoutId);
       
-      // Save to local storage so Recommendations page can pick it up
-      // Or we can directly start it
+      setGenerationStep('Saving project to your dashboard...');
       const startedProject = await projectsAPI.startProject(projectData);
       
       // Also save to local storage for frontend state
@@ -38,9 +46,14 @@ const GenerateProject = () => {
       toast.success('Project generated successfully!');
       navigate('/dashboard');
     } catch (error) {
-      toast.error(error.message || 'Failed to generate project');
+      if (error.name === 'AbortError') {
+        toast.error('Request timed out. Please try a simpler prompt or try again later.');
+      } else {
+        toast.error(error.message || 'Failed to generate project. Please try again.');
+      }
     } finally {
       setIsGenerating(false);
+      setGenerationStep('');
     }
   };
 
@@ -115,7 +128,7 @@ const GenerateProject = () => {
               {isGenerating ? (
                 <>
                   <Loader2 className="w-6 h-6 animate-spin" />
-                  Generating your project...
+                  {generationStep || 'Generating your project...'}
                 </>
               ) : (
                 <>

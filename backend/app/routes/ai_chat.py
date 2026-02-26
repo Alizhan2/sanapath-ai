@@ -65,7 +65,7 @@ If the student mentions a specific technology, provide relevant tips and resourc
     prompt = f"{system_context}\n\nStudent's question: {request.message}"
 
     response = client.models.generate_content(
-        model='gemini-2.5-flash',
+        model='gemini-2.0-flash',
         contents=prompt,
         config=types.GenerateContentConfig(
             temperature=0.7,
