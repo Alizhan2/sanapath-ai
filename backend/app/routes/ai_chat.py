@@ -1,13 +1,15 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from ..config import settings
-import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/ai", tags=["AI Assistant"])
 
 
 class ChatRequest(BaseModel):
-    message: str
+    message: str = Field(..., min_length=1, max_length=2000)
     context: str = ""  # optional: current project info, user skills, etc.
 
 
@@ -30,7 +32,8 @@ async def ai_chat(request: ChatRequest):
                 source="demo"
             )
     except Exception as e:
-        # Fallback to demo on any error
+        # Log error, then fallback to demo
+        logger.warning(f"Gemini chat error: {e}")
         return ChatResponse(
             reply=_smart_demo_response(request.message, request.context),
             source="demo-fallback"

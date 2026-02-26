@@ -1566,5 +1566,15 @@ IMPORTANT: Your response must be valid JSON matching this exact structure:
         )
     )
     
-    result = json.loads(response.text.strip())
+    try:
+        result = json.loads(response.text.strip())
+    except (json.JSONDecodeError, AttributeError) as e:
+        raise ValueError(f"AI returned malformed response. Please try again. ({e})")
+    
+    # Validate required fields
+    required = ["title", "description", "roadmap"]
+    for field in required:
+        if field not in result:
+            raise ValueError(f"AI response missing required field: {field}")
+    
     return result

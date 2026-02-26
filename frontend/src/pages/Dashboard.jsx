@@ -52,10 +52,32 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!loading && !isAuthenticated) { navigate('/login'); return; }
-    const saved = JSON.parse(localStorage.getItem('userProjects') || '[]');
-    setActiveProjects(saved);
+    
+    // Load projects from backend API, fallback to localStorage
+    const loadProjects = async () => {
+      try {
+        const { projectsAPI } = await import('../services/api');
+        const data = await projectsAPI.getMyProjects();
+        const apiProjects = data.projects || [];
+        if (apiProjects.length > 0) {
+          setActiveProjects(apiProjects);
+          // Sync to localStorage for offline hooks
+          localStorage.setItem('userProjects', JSON.stringify(apiProjects));
+        } else {
+          // Fallback to localStorage
+          const saved = JSON.parse(localStorage.getItem('userProjects') || '[]');
+          setActiveProjects(saved);
+        }
+      } catch {
+        // Offline or error — use localStorage
+        const saved = JSON.parse(localStorage.getItem('userProjects') || '[]');
+        setActiveProjects(saved);
+      }
+    };
+    loadProjects();
+    
     // If user has projects, treat as "connected"
-    if (saved.length > 0) { setGithubConnected(true); setLinkedinConnected(true); }
+    if (activeProjects.length > 0) { setGithubConnected(true); setLinkedinConnected(true); }
     recalculate();
   }, [isAuthenticated, loading, navigate, recalculate]);
 

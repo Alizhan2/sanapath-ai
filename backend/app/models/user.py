@@ -31,10 +31,10 @@ class User(Base):
     
     # Profile info (from survey) - using JSON for SQLite compatibility
     university = Column(String, nullable=True)
-    programming_languages = Column(JSON, default=[])
+    programming_languages = Column(JSON, default=list)
     skill_level = Column(String, nullable=True)
     ai_ml_experience = Column(String, nullable=True)
-    interest_areas = Column(JSON, default=[])
+    interest_areas = Column(JSON, default=list)
     career_goal = Column(String, nullable=True)
     
     # Status
@@ -66,8 +66,8 @@ class Project(Base):
     title = Column(String, nullable=False)
     description = Column(Text, nullable=True)
     difficulty_level = Column(String, nullable=True)
-    tech_stack = Column(JSON, default=[])
-    tags = Column(JSON, default=[])
+    tech_stack = Column(JSON, default=list)
+    tags = Column(JSON, default=list)
     estimated_duration = Column(String, nullable=True)
     
     # Roadmap stored as JSON string
@@ -137,20 +137,20 @@ class UserProject(Base):
     description = Column(Text, nullable=True)
     category = Column(String, nullable=True)  # CV, NLP, etc.
     difficulty = Column(String, nullable=True)
-    tech_stack = Column(JSON, default=[])
+    tech_stack = Column(JSON, default=list)
     
     # Learning goals & skills
-    learning_goals = Column(JSON, default=[])
-    skills_gained = Column(JSON, default=[])
+    learning_goals = Column(JSON, default=list)
+    skills_gained = Column(JSON, default=list)
     
     # Roadmap
-    roadmap = Column(JSON, default=[])  # List of weeks with tasks
+    roadmap = Column(JSON, default=list)  # List of weeks with tasks
     
     # Progress tracking
     status = Column(String, default="active")  # active, completed, paused
     progress_percent = Column(Integer, default=0)
     current_week = Column(Integer, default=1)
-    completed_tasks = Column(JSON, default=[])  # List of completed task IDs
+    completed_tasks = Column(JSON, default=list)  # List of completed task IDs
     
     # Time tracking
     total_hours_spent = Column(Integer, default=0)

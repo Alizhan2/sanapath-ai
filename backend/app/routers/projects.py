@@ -3,15 +3,15 @@ API router for user projects (started projects from recommendations)
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
-from pydantic import BaseModel
+from sqlalchemy import select
+from pydantic import BaseModel, Field
 from typing import List, Optional
-from datetime import datetime
-import json
+from datetime import datetime, timezone
 
 from ..database import get_db
 from ..models.user import User, UserProject
 from ..services.auth import get_current_user
+from ..services.ai_engine import generate_custom_project
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
 
@@ -75,7 +75,7 @@ class ProjectListResponse(BaseModel):
 
 
 class GenerateProjectRequest(BaseModel):
-    prompt: str
+    prompt: str = Field(..., min_length=3, max_length=1000, description="Describe the project you want to build")
 
 
 # Demo project templates for when user is not authenticated
@@ -104,8 +104,6 @@ DEMO_PROJECTS = [
     }
 ]
 
-
-from ..services.ai_engine import generate_custom_project
 
 @router.post("/generate", response_model=ProjectCreate)
 async def generate_project(
@@ -307,7 +305,7 @@ async def update_project(
     if update_data.status is not None:
         project.status = update_data.status
         if update_data.status == "completed":
-            project.completed_at = datetime.utcnow()
+            project.completed_at = datetime.now(timezone.utc)
             project.progress_percent = 100
     
     if update_data.progress_percent is not None:

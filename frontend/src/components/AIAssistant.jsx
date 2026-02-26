@@ -20,7 +20,7 @@ import {
   WifiOff
 } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://sanapath-ai.onrender.com';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const quickPrompts = [
   { icon: Rocket, text: "Suggest a project", category: "projects" },

@@ -9,7 +9,7 @@ import {
   Star, Flame, Wifi, WifiOff, Trash2
 } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://sanapath-ai.onrender.com';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const quickActions = [
   { icon: Map, text: 'Explain my next step', color: 'text-neon-purple-400 bg-neon-purple-500/10' },

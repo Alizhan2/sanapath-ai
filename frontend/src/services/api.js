@@ -135,7 +135,7 @@ export const surveyAPI = {
 
   getQuestions: () => apiCall('/api/survey/questions'),
 
-  getRecommendations: () => apiCall('/api/survey/recommendations'),
+  getRecommendations: () => apiCall('/api/survey/questions'),
 };
 
 // Projects API
@@ -166,9 +166,8 @@ export const projectsAPI = {
     method: 'DELETE',
   }),
 
-  completeTask: (uuid, taskId) => apiCall(`/api/projects/${uuid}/complete-task`, {
+  completeTask: (uuid, taskId) => apiCall(`/api/projects/${uuid}/complete-task?task_id=${encodeURIComponent(taskId)}`, {
     method: 'POST',
-    body: JSON.stringify({ task_id: taskId }),
   }),
 };
 
@@ -210,14 +209,9 @@ export const communityAPI = {
 
 // AI API
 export const aiAPI = {
-  generateProjectIdea: (interests) => apiCall('/api/ai/generate-idea', {
+  chat: (message, context = '') => apiCall('/api/ai/chat', {
     method: 'POST',
-    body: JSON.stringify({ interests }),
-  }),
-
-  getProjectHelp: (projectId, question) => apiCall('/api/ai/help', {
-    method: 'POST',
-    body: JSON.stringify({ project_id: projectId, question }),
+    body: JSON.stringify({ message, context }),
   }),
 };
 

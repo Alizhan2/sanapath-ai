@@ -1,5 +1,3 @@
-import os
-import secrets
 from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -35,7 +33,7 @@ class Settings(BaseSettings):
     SUPABASE_JWT_SECRET: str = ""
     
     # JWT & Security
-    SECRET_KEY: str = "YOUR_FALLBACK_SECRET_KEY_FOR_DEV_ONLY" 
+    SECRET_KEY: str = "YOUR_FALLBACK_SECRET_KEY_FOR_DEV_ONLY"  # overridden via env in production
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
     
@@ -69,8 +67,7 @@ class Settings(BaseSettings):
             "https://sanapath-ai.vercel.app",
             "https://sanapath-ai-frontend.vercel.app",
             "https://sanapath-ai.netlify.app",
-            "https://*.vercel.app",
-            "https://*.netlify.app",
+
             self.FRONTEND_URL,
         ]
         if self.CORS_ORIGINS:
