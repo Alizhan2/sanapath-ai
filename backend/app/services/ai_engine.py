@@ -9,12 +9,12 @@ from ..models.survey import SurveyResponse, ProjectRecommendation, ProjectRoadma
 
 logger = logging.getLogger(__name__)
 
-# Fallback model chain: if first model hits 429 quota, try the next one
-GEMINI_MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-2.5-flash-preview-04-17"]
+# Fallback model chain using stable models supported by Gemini API
+GEMINI_MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-lite"]
 
 
 async def _call_gemini_with_fallback(client, contents, config, models=None):
-    """Call Gemini with automatic model fallback on 429 RESOURCE_EXHAUSTED."""
+    """Call Gemini with automatic model fallback on quota/model-availability errors."""
     models = models or GEMINI_MODELS
     last_error = None
     for model in models:
@@ -32,9 +32,13 @@ async def _call_gemini_with_fallback(client, contents, config, models=None):
                 last_error = e
                 await asyncio.sleep(1)  # brief pause before trying next model
                 continue
+            if "404" in error_str or "NOT_FOUND" in error_str:
+                logger.warning(f"Model {model} is not available, trying next model...")
+                last_error = e
+                continue
             else:
                 raise  # non-429 errors propagate immediately
-    raise ValueError(f"All Gemini models exhausted quota. Please try again later. Last error: {last_error}")
+    raise ValueError(f"No available Gemini model could complete the request. Please try again later. Last error: {last_error}")
 
 SYSTEM_PROMPT = """You are an expert AI career counselor and project recommendation engine for the SanaPath AI platform, serving 60,000 students in the AI-Sana ecosystem.
 

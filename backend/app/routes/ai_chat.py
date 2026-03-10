@@ -67,8 +67,8 @@ If the student mentions a specific technology, provide relevant tips and resourc
 
     prompt = f"{system_context}\n\nStudent's question: {request.message}"
 
-    # Try models in fallback order on 429 quota errors
-    models = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-2.5-flash-preview-04-17"]
+    # Try stable models in fallback order on quota/availability errors
+    models = ["gemini-2.0-flash", "gemini-2.0-flash-lite"]
     last_error = None
     for model in models:
         try:
@@ -82,12 +82,17 @@ If the student mentions a specific technology, provide relevant tips and resourc
             )
             return ChatResponse(reply=response.text, source=f"gemini-{model}")
         except Exception as e:
-            if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+            error_str = str(e)
+            if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
                 logger.warning(f"Chat model {model} hit 429, trying next...")
                 last_error = e
                 continue
+            if "404" in error_str or "NOT_FOUND" in error_str:
+                logger.warning(f"Chat model {model} not available, trying next...")
+                last_error = e
+                continue
             raise
-    raise Exception(f"All Gemini models exhausted quota: {last_error}")
+    raise Exception(f"No available Gemini chat model could complete the request: {last_error}")
 
 
 def _smart_demo_response(message: str, context: str = "") -> str:
