@@ -82,6 +82,15 @@ async function apiCall(endpoint, options = {}) {
       throw error;
     }
 
+    // AbortController timeout
+    if (error.name === 'AbortError') {
+      throw new ApiError(
+        'Request timed out. The server took too long to respond.',
+        408,
+        'TIMEOUT_ERROR'
+      );
+    }
+
     // Network errors
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
       throw new ApiError(
@@ -140,9 +149,10 @@ export const surveyAPI = {
 
 // Projects API
 export const projectsAPI = {
-  generateProject: (prompt) => apiCall('/api/projects/generate', {
+  generateProject: (prompt, signal) => apiCall('/api/projects/generate', {
     method: 'POST',
     body: JSON.stringify({ prompt }),
+    signal,
   }),
 
   startProject: (projectData) => apiCall('/api/projects/start', {

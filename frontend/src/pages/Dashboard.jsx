@@ -25,9 +25,8 @@ const Dashboard = () => {
   const { steps, weekTasks, overallProgress, currentStep, doneTasks, totalTasks, toggleTaskStatus } = useRoadmapData();
   const toast = useToast();
 
-  // Simulated connected state — in real app would come from user profile
-  const [githubConnected, setGithubConnected] = useState(false);
-  const [linkedinConnected, setLinkedinConnected] = useState(false);
+  // Simulated connected state — set true once user has any projects or completed survey
+  const [profileReady, setProfileReady] = useState(false);
 
   // Toast on task completion
   useEffect(() => {
@@ -76,12 +75,12 @@ const Dashboard = () => {
     };
     loadProjects();
     
-    // If user has projects, treat as "connected"
-    if (activeProjects.length > 0) { setGithubConnected(true); setLinkedinConnected(true); }
+    // If user has projects or saved goals, treat as ready
+    if (activeProjects.length > 0 || localStorage.getItem('sanapath_goals')) { setProfileReady(true); }
     recalculate();
   }, [isAuthenticated, loading, navigate, recalculate]);
 
-  const hasData = githubConnected && linkedinConnected;
+  const hasData = profileReady;
 
   // Memoize expensive skill computation
   const dashboardSkills = useMemo(() => {
@@ -125,7 +124,7 @@ const Dashboard = () => {
               {hasData ? (
                 <p className="text-deep-blue-400 text-sm">Your current path: <span className="text-neon-purple-400">{(() => { const g = JSON.parse(localStorage.getItem('sanapath_goals') || '{}'); return g.selectedRoles?.join(' → ') || user?.career_goal || 'Career Explorer'; })()}</span></p>
               ) : (
-                <p className="text-deep-blue-400 text-sm">Connect your GitHub and LinkedIn to start your path</p>
+                <p className="text-deep-blue-400 text-sm">Generate your first project or take the career survey to get started</p>
               )}
             </div>
           </div>
@@ -142,40 +141,34 @@ const Dashboard = () => {
       {/* ══════ EMPTY STATE ══════ */}
       {!hasData && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          {/* Connect Profiles Card */}
+          {/* Get Started Card */}
           <div className="card-glass p-10 text-center mb-8">
             <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-neon-purple-500/20 to-cyber-blue/20 flex items-center justify-center">
-              <Brain className="w-12 h-12 text-neon-purple-400" />
+              <Rocket className="w-12 h-12 text-neon-purple-400" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-3">Connect Your Profiles</h2>
-            <p className="text-deep-blue-300 max-w-md mx-auto mb-8">Link your GitHub and LinkedIn to let our AI analyze your skills and generate a personalized career roadmap.</p>
+            <h2 className="text-2xl font-bold text-white mb-3">Welcome to SanaPath AI!</h2>
+            <p className="text-deep-blue-300 max-w-md mx-auto mb-8">Get started by generating your first AI-powered project or take our career survey to receive personalized recommendations.</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <motion.button
-                onClick={() => setGithubConnected(true)}
-                className={`flex items-center gap-3 px-8 py-4 rounded-xl font-semibold transition-all ${
-                  githubConnected
-                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                    : 'bg-[#24292e] text-white hover:bg-[#2f363d] hover:shadow-lg'
-                }`}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                {githubConnected ? <CheckCircle2 className="w-5 h-5" /> : <Github className="w-5 h-5" />}
-                {githubConnected ? 'GitHub Connected' : 'Connect GitHub'}
-              </motion.button>
-              <motion.button
-                onClick={() => setLinkedinConnected(true)}
-                className={`flex items-center gap-3 px-8 py-4 rounded-xl font-semibold transition-all ${
-                  linkedinConnected
-                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                    : 'bg-[#0077B5] text-white hover:bg-[#006097] hover:shadow-lg'
-                }`}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                {linkedinConnected ? <CheckCircle2 className="w-5 h-5" /> : <Linkedin className="w-5 h-5" />}
-                {linkedinConnected ? 'LinkedIn Connected' : 'Connect LinkedIn'}
-              </motion.button>
+              <Link to="/generate-project">
+                <motion.button
+                  className="flex items-center gap-3 px-8 py-4 rounded-xl font-semibold bg-gradient-to-r from-neon-purple-600 to-cyber-blue text-white hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] transition-all"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  <Sparkles className="w-5 h-5" />
+                  Generate AI Project
+                </motion.button>
+              </Link>
+              <Link to="/ai-session">
+                <motion.button
+                  className="flex items-center gap-3 px-8 py-4 rounded-xl font-semibold bg-deep-blue-800 text-white hover:bg-deep-blue-700 transition-all border border-deep-blue-600"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  <Brain className="w-5 h-5" />
+                  Career Survey
+                </motion.button>
+              </Link>
             </div>
           </div>
 
@@ -188,14 +181,14 @@ const Dashboard = () => {
             </div>
             <div className="card-glass p-5">
               <div className="flex items-center gap-2 mb-3 text-deep-blue-500"><CheckCircle2 className="w-4 h-4" /> This Week's Focus</div>
-              <p className="text-xs text-deep-blue-600">Connect profiles to see tasks</p>
+              <p className="text-xs text-deep-blue-600">Generate a project to see tasks</p>
             </div>
             <div className="card-glass p-5">
-              <div className="flex items-center gap-2 mb-3 text-deep-blue-500"><Github className="w-4 h-4" /> GitHub Health</div>
+              <div className="flex items-center gap-2 mb-3 text-deep-blue-500"><Target className="w-4 h-4" /> Skills</div>
               <div className="text-3xl font-bold text-deep-blue-700">—</div>
             </div>
             <div className="card-glass p-5">
-              <div className="flex items-center gap-2 mb-3 text-deep-blue-500"><Linkedin className="w-4 h-4" /> LinkedIn Visibility</div>
+              <div className="flex items-center gap-2 mb-3 text-deep-blue-500"><BarChart3 className="w-4 h-4" /> Activity</div>
               <div className="text-3xl font-bold text-deep-blue-700">—</div>
             </div>
           </div>

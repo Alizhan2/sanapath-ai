@@ -19,15 +19,24 @@ const GenerateProject = () => {
     if (!prompt.trim()) return;
 
     setIsGenerating(true);
-    setGenerationStep('Sending request to AI...');
-    try {
-      // Create an AbortController with 90s timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 90000);
+    setGenerationStep('Connecting to server...');
+    
+    // Create AbortController with 90s timeout — signal is passed to fetch
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 90000);
 
-      setGenerationStep('AI is generating your project plan...');
-      const projectData = await projectsAPI.generateProject(prompt);
+    try {
+      // Simulate progress steps for better UX
+      const stepTimer1 = setTimeout(() => setGenerationStep('AI is analyzing your request...'), 2000);
+      const stepTimer2 = setTimeout(() => setGenerationStep('Generating project structure & roadmap...'), 6000);
+      const stepTimer3 = setTimeout(() => setGenerationStep('Building detailed week-by-week plan...'), 12000);
+      const stepTimer4 = setTimeout(() => setGenerationStep('Almost done, finalizing project...'), 20000);
+
+      const projectData = await projectsAPI.generateProject(prompt, controller.signal);
+      
+      // Clear all timers
       clearTimeout(timeoutId);
+      [stepTimer1, stepTimer2, stepTimer3, stepTimer4].forEach(clearTimeout);
       
       setGenerationStep('Saving project to your dashboard...');
       const startedProject = await projectsAPI.startProject(projectData);
@@ -46,12 +55,13 @@ const GenerateProject = () => {
       toast.success('Project generated successfully!');
       navigate('/dashboard');
     } catch (error) {
-      if (error.name === 'AbortError') {
-        toast.error('Request timed out. Please try a simpler prompt or try again later.');
+      if (error.name === 'AbortError' || error.errorCode === 'TIMEOUT_ERROR') {
+        toast.error('Request timed out. The server may be waking up — please try again in 30 seconds.');
       } else {
         toast.error(error.message || 'Failed to generate project. Please try again.');
       }
     } finally {
+      clearTimeout(timeoutId);
       setIsGenerating(false);
       setGenerationStep('');
     }
