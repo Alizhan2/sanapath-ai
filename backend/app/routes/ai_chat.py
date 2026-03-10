@@ -68,7 +68,7 @@ If the student mentions a specific technology, provide relevant tips and resourc
     prompt = f"{system_context}\n\nStudent's question: {request.message}"
 
     # Try models in fallback order on 429 quota errors
-    models = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash"]
+    models = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-2.5-flash-preview-04-17"]
     last_error = None
     for model in models:
         try:

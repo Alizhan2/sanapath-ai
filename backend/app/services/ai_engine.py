@@ -10,7 +10,7 @@ from ..models.survey import SurveyResponse, ProjectRecommendation, ProjectRoadma
 logger = logging.getLogger(__name__)
 
 # Fallback model chain: if first model hits 429 quota, try the next one
-GEMINI_MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash"]
+GEMINI_MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-2.5-flash-preview-04-17"]
 
 
 async def _call_gemini_with_fallback(client, contents, config, models=None):
