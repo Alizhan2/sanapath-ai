@@ -44,3 +44,6 @@ Thumbs.db
 .coverage
 htmlcov/
 .pytest_cache/
+
+# Temp files
+temp_*.py
