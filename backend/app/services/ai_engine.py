@@ -1381,13 +1381,28 @@ def generate_demo_recommendations(survey: SurveyResponse) -> RecommendationRespo
         ]
     }
     
+    # Map survey interest names to template keys
+    interest_to_template = {
+        "Natural Language Processing": "NLP",
+        "Computer Vision": "Computer Vision",
+        "Reinforcement Learning": "Machine Learning",
+        "Generative AI": "Generative AI",
+        "MLOps & Deployment": "Machine Learning",
+        "Data Engineering": "Machine Learning",
+        "Robotics & Automation": "Computer Vision",
+        "Healthcare AI": "NLP",
+        "Finance & Trading AI": "Machine Learning",
+        "Conversational AI": "Generative AI",
+    }
+    
     recommendations = []
     used_titles = set()
     
-    # Select projects based on user interests
+    # Select projects based on user interests (with name mapping)
     for interest in survey.interest_areas:
-        if interest in project_templates and project_templates[interest]["title"] not in used_titles:
-            template = project_templates[interest]
+        template_key = interest_to_template.get(interest, interest)
+        if template_key in project_templates and project_templates[template_key]["title"] not in used_titles:
+            template = project_templates[template_key]
             used_titles.add(template["title"])
             
             # Convert roadmap to proper structure
@@ -1483,16 +1498,16 @@ async def get_recommendations(survey: SurveyResponse) -> RecommendationResponse:
     
     # Check if demo mode is enabled
     if settings.is_ai_demo:
-        print("AI Demo mode enabled, using demo recommendations")
+        logger.info("AI Demo mode enabled, using demo recommendations")
         return generate_demo_recommendations(survey)
     
     # Try Gemini first (default provider)
     if settings.AI_PROVIDER == "gemini" and settings.GEMINI_API_KEY:
         try:
-            print("Using Gemini AI for recommendations...")
+            logger.info("Using Gemini AI for recommendations...")
             return await get_recommendations_gemini(survey)
         except Exception as e:
-            print(f"Gemini API error: {e}, falling back to demo mode")
+            logger.warning(f"Gemini API error: {e}, falling back to demo mode")
             return generate_demo_recommendations(survey)
     
     # Try Anthropic
@@ -1500,7 +1515,7 @@ async def get_recommendations(survey: SurveyResponse) -> RecommendationResponse:
         try:
             return await get_recommendations_anthropic(survey)
         except Exception as e:
-            print(f"Anthropic API error: {e}, falling back to demo mode")
+            logger.warning(f"Anthropic API error: {e}, falling back to demo mode")
             return generate_demo_recommendations(survey)
     
     # Try OpenAI
@@ -1508,11 +1523,11 @@ async def get_recommendations(survey: SurveyResponse) -> RecommendationResponse:
         try:
             return await get_recommendations_openai(survey)
         except Exception as e:
-            print(f"OpenAI API error: {e}, falling back to demo mode")
+            logger.warning(f"OpenAI API error: {e}, falling back to demo mode")
             return generate_demo_recommendations(survey)
     
     # No API keys - use demo mode
-    print("No AI API keys configured, using demo recommendations")
+    logger.info("No AI API keys configured, using demo recommendations")
     return generate_demo_recommendations(survey)
 
 
