@@ -67,16 +67,27 @@ If the student mentions a specific technology, provide relevant tips and resourc
 
     prompt = f"{system_context}\n\nStudent's question: {request.message}"
 
-    response = client.models.generate_content(
-        model='gemini-2.0-flash',
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            temperature=0.7,
-            max_output_tokens=1000,
-        ),
-    )
-
-    return ChatResponse(reply=response.text, source="gemini")
+    # Try models in fallback order on 429 quota errors
+    models = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash"]
+    last_error = None
+    for model in models:
+        try:
+            response = client.models.generate_content(
+                model=model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    temperature=0.7,
+                    max_output_tokens=1000,
+                ),
+            )
+            return ChatResponse(reply=response.text, source=f"gemini-{model}")
+        except Exception as e:
+            if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+                logger.warning(f"Chat model {model} hit 429, trying next...")
+                last_error = e
+                continue
+            raise
+    raise Exception(f"All Gemini models exhausted quota: {last_error}")
 
 
 def _smart_demo_response(message: str, context: str = "") -> str:

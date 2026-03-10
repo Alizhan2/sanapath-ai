@@ -122,6 +122,11 @@ async def generate_project(
         return ProjectCreate(**project_data)
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Project generation timed out. Please try a shorter or simpler prompt.")
+    except ValueError as e:
+        error_msg = str(e)
+        if "quota" in error_msg.lower() or "exhausted" in error_msg.lower():
+            raise HTTPException(status_code=429, detail="AI quota temporarily exhausted. Please wait a minute and try again.")
+        raise HTTPException(status_code=500, detail=f"Error generating project: {error_msg}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating project: {str(e)}")
 

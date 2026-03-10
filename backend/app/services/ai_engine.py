@@ -1,11 +1,40 @@
 import json
+import asyncio
+import logging
 from typing import List
-from openai import OpenAI
-from anthropic import Anthropic
 from google import genai
 from google.genai import types
 from ..config import settings
 from ..models.survey import SurveyResponse, ProjectRecommendation, ProjectRoadmapWeek, RecommendationResponse
+
+logger = logging.getLogger(__name__)
+
+# Fallback model chain: if first model hits 429 quota, try the next one
+GEMINI_MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash"]
+
+
+async def _call_gemini_with_fallback(client, contents, config, models=None):
+    """Call Gemini with automatic model fallback on 429 RESOURCE_EXHAUSTED."""
+    models = models or GEMINI_MODELS
+    last_error = None
+    for model in models:
+        try:
+            response = client.models.generate_content(
+                model=model,
+                contents=contents,
+                config=config,
+            )
+            return response
+        except Exception as e:
+            error_str = str(e)
+            if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
+                logger.warning(f"Model {model} hit 429 quota limit, trying next model...")
+                last_error = e
+                await asyncio.sleep(1)  # brief pause before trying next model
+                continue
+            else:
+                raise  # non-429 errors propagate immediately
+    raise ValueError(f"All Gemini models exhausted quota. Please try again later. Last error: {last_error}")
 
 SYSTEM_PROMPT = """You are an expert AI career counselor and project recommendation engine for the SanaPath AI platform, serving 60,000 students in the AI-Sana ecosystem.
 
@@ -90,6 +119,7 @@ Based on this comprehensive profile, generate exactly 1 personalized AI project 
 
 
 async def get_recommendations_openai(survey: SurveyResponse) -> RecommendationResponse:
+    from openai import OpenAI
     client = OpenAI(api_key=settings.OPENAI_API_KEY)
     
     response = client.chat.completions.create(
@@ -127,6 +157,7 @@ async def get_recommendations_openai(survey: SurveyResponse) -> RecommendationRe
 
 
 async def get_recommendations_anthropic(survey: SurveyResponse) -> RecommendationResponse:
+    from anthropic import Anthropic
     client = Anthropic(api_key=settings.ANTHROPIC_API_KEY)
     
     response = client.messages.create(
@@ -172,14 +203,13 @@ async def get_recommendations_gemini(survey: SurveyResponse) -> RecommendationRe
 IMPORTANT: Respond ONLY with valid JSON, no additional text or markdown.
 You MUST follow the schema exactly as defined."""
 
-    response = client.models.generate_content(
-        model='gemini-2.0-flash',
+    response = await _call_gemini_with_fallback(
+        client,
         contents=prompt,
         config=types.GenerateContentConfig(
             temperature=0.7,
             max_output_tokens=8192,
             response_mime_type="application/json",
-            response_schema=RecommendationResponse,
         )
     )
     
@@ -1556,8 +1586,8 @@ IMPORTANT: Your response must be valid JSON matching this exact structure:
 }}
 """
     
-    response = client.models.generate_content(
-        model='gemini-2.0-flash',
+    response = await _call_gemini_with_fallback(
+        client,
         contents=system_prompt,
         config=types.GenerateContentConfig(
             temperature=0.7,
